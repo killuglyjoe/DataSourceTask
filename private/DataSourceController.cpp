@@ -1,5 +1,6 @@
 #include "DataSourceController.h"
 
+#include "DataSourceEmulator.h"
 #include "DataSourceFile.h"
 
 #include <cstring>
@@ -30,6 +31,10 @@ DataSourceController::DataSourceController(
         {
         case SOURCE_TYPE::SOURCE_TYPE_FILE:
             m_data_source = std::make_unique<DataSourceFile>(source_path);
+            break;
+
+        case SOURCE_TYPE::SOURCE_TYPE_EMULATOR:
+            m_data_source = std::make_unique<DataSourceFileEmulator>(source_type, p_type, num_elements);
             break;
         default:
             break;
@@ -78,8 +83,6 @@ void DataSourceController::readData()
 {
     is_read_active = true;
 
-    std::future<void> future_result;
-
     Timer timer;
     timer.reset();
 
@@ -98,16 +101,9 @@ void DataSourceController::readData()
         {
             int buf_num   = m_active_buffer;
 
-            future_result = std::async(
-                std::launch::async,
-                [&](const int & ret_size, const int & buf_num)
-                {
-                    // обробка даних
-                    m_data_source_frm_processor->putNewFrame(m_buffer[buf_num], ret_size);
-                    m_elapsed = timer.elapsed();
-                },
-                ret_size,
-                buf_num);
+            // обробка даних
+            m_data_source_frm_processor->putNewFrame(m_buffer[buf_num], ret_size);
+            m_elapsed = timer.elapsed();
         }
 
         ++m_active_buffer;

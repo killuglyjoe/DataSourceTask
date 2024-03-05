@@ -53,7 +53,7 @@ public:
         if (m_frame)
             return m_frame->source_id;
 
-        return SOURCE_TYPE::SOURCE_TYPE_OTHER;
+        return SOURCE_TYPE::SOURCE_TYPE_UNDEFINED;
     }
     /// \brief
     void setSourceID(const SOURCE_TYPE & source_type)

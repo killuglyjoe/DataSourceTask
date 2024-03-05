@@ -22,7 +22,12 @@ public:
     /// \return
     virtual int read(char * data, int size) = 0;
 
+    inline double elapsed() { return m_elapsed; }
+
     inline SOURCE_TYPE sourceType() const { return m_source_type; }
+
+protected:
+    double m_elapsed;
 
 private:
     SOURCE_TYPE m_source_type;

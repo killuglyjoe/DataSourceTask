@@ -26,7 +26,13 @@ int DataSourceFile::read(char * data, int size)
     if (!source_file.seekg(0, std::ios::beg))
         return static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
 
-    source_file.read(data, size);
+    int index = 0;
+    char character;
+
+    while (index < size && (source_file.get(character)))
+    {
+        data[index++] = character;
+    }
 
     if (source_file.fail())
     {
@@ -48,7 +54,7 @@ int DataSourceFile::read(char * data, int size)
         return static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
     }
 
-    return size;
+    return index;
 }
 
 } // namespace DATA_SOURCE_TASK

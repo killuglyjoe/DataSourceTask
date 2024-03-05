@@ -27,21 +27,19 @@ DataSourceFrameProcessor::~DataSourceFrameProcessor() { is_process_active = fals
 std::future<void> future_result;
 void DataSourceFrameProcessor::frameProcess()
 {
+    Timer timer;
     while (is_process_active)
     {
         if (m_need_validate)
         {
+            timer.reset();
             if (validateFrame(m_buffer_to_process, m_req_size))
             {
-                future_result = std::async(
-                    std::launch::async,
-                    [&](std::shared_ptr<DataSourceBuffer<float>> buf)
-                    {
-                        // реєстрація блоків даних
-                        m_data_source_recorder->putNewFrame(buf);
-                    },
-                    curProcessedFrame());
+                // реєстрація блоків даних
+                m_data_source_recorder->putNewFrame(curProcessedFrame());
             }
+
+            m_elapsed = timer.elapsed_ms();
 
             m_need_validate = false;
         }

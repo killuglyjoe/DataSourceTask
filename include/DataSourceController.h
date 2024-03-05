@@ -31,6 +31,9 @@ public:
 
     virtual ~DataSourceController();
 
+    inline DataSource &dataSource() const { return *m_data_source.get(); }
+    inline DataSourceFrameProcessor &frameProcessor() const { return *m_data_source_frm_processor.get(); }
+
     inline int framesTotal() { return m_buffer[m_active_buffer]->frameCounter(); }
 
     inline int header() { return m_buffer[m_active_buffer]->header(); }

@@ -36,6 +36,7 @@ set(HEADERS
     include/DataSource.h
     include/DataSourceFile.h
     include/DataSourceBuffer.h
+    include/DataSourceEmulator.h
     include/DataSourceController.h
     include/DataSourceFrameRecorder.h
     include/DataSourceFrameProcessor.h
@@ -44,6 +45,7 @@ set(HEADERS
 set(SOURCES
     private/DataSource.cpp
     private/DataSourceFile.cpp
+    private/DataSourceEmulator.cpp
     private/DataSourceController.cpp
     private/DataSourceFrameRecorder.cpp
     private/DataSourceFrameProcessor.cpp
