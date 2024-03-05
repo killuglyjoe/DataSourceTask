@@ -87,7 +87,6 @@ void DataSourceController::readData()
 
     while (is_read_active)
     {
-        m_elapsed = timer.elapsed();
         // std::cout << " Process elapsed: " << m_elapsed << std::endl;
         timer.reset();
         static int ret_size = 0;
@@ -111,6 +110,8 @@ void DataSourceController::readData()
                     {
                         // реєстрація блоків даних
                         m_data_source_recorder->putNewFrame(m_data_source_frm_processor->curProcessedFrame());
+
+                        m_elapsed = timer.elapsed();
                     }
                     else
                     {

@@ -11,10 +11,19 @@ class Timer
 public:
     Timer() { clock_gettime(CLOCK_REALTIME, &beg_); }
 
+    /// \brief Пройдений час в секундах
+    /// \return
     double elapsed() {
         clock_gettime(CLOCK_REALTIME, &end_);
         return end_.tv_sec - beg_.tv_sec +
                (end_.tv_nsec - beg_.tv_nsec) / 1000000000.;
+    }
+    /// \brief Пройдений час в мілісекундах
+    /// \return
+    double elapsed_ms() {
+        clock_gettime(CLOCK_REALTIME, &end_);
+        return end_.tv_sec - beg_.tv_sec +
+               (end_.tv_nsec - beg_.tv_nsec) / 1000000.;
     }
 
     void reset() { clock_gettime(CLOCK_REALTIME, &beg_); }

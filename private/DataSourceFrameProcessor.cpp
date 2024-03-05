@@ -1,6 +1,7 @@
 #include "DataSourceFrameProcessor.h"
 #include <iostream>
 #include <ostream>
+#include <thread>
 
 #ifdef WITH_OPEN_GL
 #include "GL/gl.h"
@@ -34,9 +35,6 @@ bool DataSourceFrameProcessor::validateFrame(
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
-    // Timer timer;
-    // timer.reset();
-
     frame * frm                = buffer->frame();
     char * payload             = buffer->payload();
 
@@ -66,7 +64,7 @@ bool DataSourceFrameProcessor::validateFrame(
     }
 
     // оновимо заголовок
-    memcpy(m_buffer->frame(), frm, sizeof(struct frame));
+    std::copy(frm, frm + sizeof(struct frame), m_buffer->frame());
 
     // - реалізувати максимально обчислювально ефективне перетворення усіх даних
     // до єдиного типу 32 bit IEEE 754 float та приведення до діапазону +/-1.0;
@@ -78,7 +76,7 @@ bool DataSourceFrameProcessor::validateFrame(
     }
 
     // перекладемо дані якшо вони вже в форматі float
-    memcpy(m_buffer->payload(), payload, sizeof(struct frame));
+    std::copy(payload, payload + m_buffer->payloadSize() * m_buffer->typeSize(), m_buffer->payload());
 
     return true;
 }

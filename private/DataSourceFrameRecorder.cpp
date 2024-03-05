@@ -90,7 +90,10 @@ void DataSourceFrameRecorder::updateBufs(
                 num_data_store = availabale_in_data;
             }
 
-            memcpy(buf->record_buffer.data() + buf->pos, frame->payload() + av_data_in_pos, num_data_store);
+            std::copy(
+                frame->payload() + av_data_in_pos,
+                frame->payload() + av_data_in_pos + num_data_store,
+                buf->record_buffer.data() + buf->pos);
 
             buf->pos += num_data_store;
             buf->available_size -= num_data_store;

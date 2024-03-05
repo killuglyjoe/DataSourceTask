@@ -66,12 +66,14 @@ DataSourceFileEmulator::DataSourceFileEmulator(
     m_write_thread = std::thread(&DataSourceFileEmulator::writeData, this);
 }
 
-Timer timer;
+Timer overall_timer; // між записом в файл
+Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 
 std::mutex write_lock;
 void DataSourceFileEmulator::writeData()
 {
-    timer.reset();
+    overall_timer.reset();
+    diff_timer.reset();
 
     is_write_active = true;
 
@@ -106,9 +108,11 @@ void DataSourceFileEmulator::writeData()
     {
         // Write data to the file
         {
-            m_elapsed = timer.elapsed();
-            timer.reset();
-            // std::cout << " Write elapsed: " << m_elapsed << std::endl;
+            m_elapsed = overall_timer.elapsed();
+            overall_timer.reset();
+
+            diff_timer.reset();
+
             // Згенеруємо випадкові числа
             for (int i = 0; i < m_buffer->payloadSize(); ++i)
             {
@@ -173,7 +177,9 @@ void DataSourceFileEmulator::writeData()
             m_buffer->setFrameCounter(++frm_counter);
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_RATE)); // 200 Hz
+        double dif_ms = diff_timer.elapsed_ms();
+        if (dif_ms < FRAME_RATE)
+            std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_RATE - static_cast<int>(dif_ms))); // 200 Hz
     }
 }
 
