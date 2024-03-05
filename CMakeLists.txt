@@ -6,9 +6,6 @@ cmake_policy(SET CMP0048 NEW)
 
 SET(CMAKE_SYSTEM_NAME Windows)
 
-# where is the target environment located
-# set(CMAKE_FIND_ROOT_PATH  "C:/Qt6/Tools/mingw810_64/bin")
-
 find_program(CMAKE_C_COMPILER NAMES gcc)
 find_program(CMAKE_CXX_COMPILER NAMES g++)
 find_program(CMAKE_AR NAMES ar)
