@@ -1,42 +1,59 @@
 #include "DataSourceFrameProcessor.h"
+#include "DataSourceController.h"
+#include <future>
 #include <iostream>
 #include <ostream>
 #include <thread>
 
-#ifdef WITH_OPEN_GL
-#include "GL/gl.h"
-#include "GL/glext.h"
-#endif
-
 namespace DATA_SOURCE_TASK
 {
 
-#ifdef WITH_OPEN_GL
-// вершинний шейдер для перетворення цілого в число з плаваючою крапкою
-// static const char * convert_2_float = {"#version 330 core"
-//                                        "layout(location = 0) in ivec2 inPosition; // Integer attribute"
-//                                        "void main()"
-//                                        "{"
-//                                        "// Convert integer to float"
-//                                        "vec2 floatPosition = vec2(inPosition);"
-//                                        "// Pass the converted float values to the fragment shader"
-//                                        "gl_Position = vec4(floatPosition, 0.0, 1.0);"
-//                                        "}"};
-#endif
+std::thread process_thread;
+static std::atomic<bool> is_process_active {true};
 
 DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const int & num_elements):
-    m_frame_size {frame_size}, m_packets_loss {0}
+    m_frame_size {frame_size}, m_packets_loss {0}, m_need_validate {false}, m_ready_buffer {-1}
 {
-    m_buffer = std::make_shared<DataSourceBuffer<float>>(num_elements);
+    for (std::size_t i = 0; i < MAX_READ_BUF_NUM; i++)
+        m_buffer[i] = std::make_shared<DataSourceBuffer<float>>(num_elements);
+
+    m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", num_elements);
+
+    process_thread = std::thread(&DataSourceFrameProcessor::frameProcess, this);
 }
 
-bool DataSourceFrameProcessor::validateFrame(
-    const std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)
+DataSourceFrameProcessor::~DataSourceFrameProcessor() { is_process_active = false; }
+
+std::future<void> future_result;
+void DataSourceFrameProcessor::frameProcess()
+{
+    while (is_process_active)
+    {
+        if (m_need_validate)
+        {
+            if (validateFrame(m_buffer_to_process, m_req_size))
+            {
+                future_result = std::async(
+                    std::launch::async,
+                    [&](std::shared_ptr<DataSourceBuffer<float>> buf)
+                    {
+                        // реєстрація блоків даних
+                        m_data_source_recorder->putNewFrame(buf);
+                    },
+                    curProcessedFrame());
+            }
+
+            m_need_validate = false;
+        }
+    }
+}
+
+bool DataSourceFrameProcessor::validateFrame(DataSourceBufferInterface * buffer, const int & updated_size)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
-    frame * frm                = buffer->frame();
-    char * payload             = buffer->payload();
+    frame * frm    = buffer->frame();
+    char * payload = buffer->payload();
 
     static int cur_frm_counter = -1;
 
@@ -49,7 +66,7 @@ bool DataSourceFrameProcessor::validateFrame(
         // лічільник кадрів
         const int delta = frm->frame_counter - cur_frm_counter;
 
-        if (delta> 1)
+        if (delta > 1)
         {
             m_packets_loss += frm->frame_counter - cur_frm_counter - 1;
         }
@@ -63,42 +80,41 @@ bool DataSourceFrameProcessor::validateFrame(
         ++m_packets_loss;
     }
 
+    // Готовий буфер для запису
+    ++m_ready_buffer;
+
+    if (m_ready_buffer >= 2)
+        m_ready_buffer = 0;
+
+    DataSourceBuffer<float> * cur_buf = m_buffer[m_ready_buffer].get();
     // оновимо заголовок
-    std::copy(frm, frm + sizeof(struct frame), m_buffer->frame());
+    std::copy(frm, frm + sizeof(struct frame), cur_buf->frame());
 
     // - реалізувати максимально обчислювально ефективне перетворення усіх даних
     // до єдиного типу 32 bit IEEE 754 float та приведення до діапазону +/-1.0;
     if (frm->payload_type != PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT)
     {
-        convertToFLoat(payload);
+        // CPU
+        for (int i = 0; i < cur_buf->payloadSize(); ++i)
+        {
+            cur_buf->payload()[i] = static_cast<float>(payload[i]);
+        }
 
         return true;
     }
 
     // перекладемо дані якшо вони вже в форматі float
-    std::copy(payload, payload + m_buffer->payloadSize() * m_buffer->typeSize(), m_buffer->payload());
+    std::copy(payload, payload + cur_buf->payloadSize() * cur_buf->typeSize(), cur_buf->payload());
 
     return true;
 }
 
-void DataSourceFrameProcessor::convertToFLoat(char * payload)
+void DataSourceFrameProcessor::putNewFrame(
+    const std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)
 {
-    // #ifdef WITH_OPEN_GL
-    //     // GPU
-    //     glBegin(GL_POINTS);
-
-    //     /// \todo
-
-    //     glEnd();
-    // #else
-
-    // CPU
-    for (int i = 0; i < m_buffer->payloadSize(); ++i)
-    {
-        m_buffer->payload()[i] = static_cast<float>(payload[i]);
-    }
-
-    // #endif
+    m_buffer_to_process = buffer.get();
+    m_req_size          = updated_size;
+    m_need_validate     = true;
 }
 
 } // namespace DATA_SOURCE_TASK

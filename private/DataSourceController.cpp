@@ -69,8 +69,6 @@ DataSourceController::DataSourceController(
 
     m_data_source_frm_processor = std::make_unique<DataSourceFrameProcessor>(m_buffer[0]->size(), num_elements);
 
-    m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", num_elements);
-
     // - організувати зчитування даних в окремому потоці;
     // Потік який читає данні
     read_thread = std::thread(&DataSourceController::readData, this);
@@ -87,7 +85,6 @@ void DataSourceController::readData()
 
     while (is_read_active)
     {
-        // std::cout << " Process elapsed: " << m_elapsed << std::endl;
         timer.reset();
         static int ret_size = 0;
 
@@ -106,16 +103,8 @@ void DataSourceController::readData()
                 [&](const int & ret_size, const int & buf_num)
                 {
                     // обробка даних
-                    if (m_data_source_frm_processor->validateFrame(m_buffer[buf_num], ret_size))
-                    {
-                        // реєстрація блоків даних
-                        m_data_source_recorder->putNewFrame(m_data_source_frm_processor->curProcessedFrame());
-
-                        m_elapsed = timer.elapsed();
-                    }
-                    else
-                    {
-                    }
+                    m_data_source_frm_processor->putNewFrame(m_buffer[buf_num], ret_size);
+                    m_elapsed = timer.elapsed();
                 },
                 ret_size,
                 buf_num);
