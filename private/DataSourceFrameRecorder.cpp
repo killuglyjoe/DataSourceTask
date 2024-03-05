@@ -3,6 +3,7 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <mutex>
 
 namespace DATA_SOURCE_TASK
@@ -73,9 +74,8 @@ void DataSourceFrameRecorder::recordBlock()
     }
 }
 
-void DataSourceFrameRecorder::updateBufs(DataSourceBufferInterface & frame,
-                                         std::size_t availabale_in_data,
-                                         int av_data_in_pos)
+void DataSourceFrameRecorder::updateBufs(
+    std::shared_ptr<DataSourceBuffer<float>> frame, std::size_t availabale_in_data, int av_data_in_pos)
 {
     for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)
     {
@@ -90,7 +90,7 @@ void DataSourceFrameRecorder::updateBufs(DataSourceBufferInterface & frame,
                 num_data_store = availabale_in_data;
             }
 
-           memcpy(buf->record_buffer.data() + buf->pos, frame.payload() + av_data_in_pos, num_data_store);
+            memcpy(buf->record_buffer.data() + buf->pos, frame->payload() + av_data_in_pos, num_data_store);
 
             buf->pos += num_data_store;
             buf->available_size -= num_data_store;
@@ -103,11 +103,11 @@ void DataSourceFrameRecorder::updateBufs(DataSourceBufferInterface & frame,
     }
 }
 
-void DataSourceFrameRecorder::putNewFrame(DataSourceBufferInterface & frame)
+void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float>> frame)
 {
     std::lock_guard<std::mutex> lock(m_write_lock);
 
-    std::size_t availabale_in_data = frame.payloadSize();
+    std::size_t availabale_in_data = frame->payloadSize();
     int av_data_in_pos             = 0;
 
     updateBufs(frame, availabale_in_data, av_data_in_pos);

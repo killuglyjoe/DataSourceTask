@@ -2,6 +2,7 @@
 #define DATASOURCEFRAMERECORDER_H
 
 #include "DataSourceBuffer.h"
+#include <memory>
 #include <mutex>
 
 namespace DATA_SOURCE_TASK
@@ -32,11 +33,11 @@ public:
 
     /// \brief Заповнюємо буфери розміром до к-сті відліків степеня 2
     /// \param buffer - дані джерела
-    void putNewFrame(DataSourceBufferInterface & buffer);
+    void putNewFrame(std::shared_ptr<DataSourceBuffer<float>> buffer);
 
 protected:
     void recordBlock();
-    void updateBufs(DataSourceBufferInterface & frame, std::size_t availabale_in_data, int av_data_in_pos);
+    void updateBufs(std::shared_ptr<DataSourceBuffer<float>> frame, std::size_t availabale_in_data, int av_data_in_pos);
 
 private:
     int m_buffer_size         = 0;          // к-сть відліків степепня числа 2

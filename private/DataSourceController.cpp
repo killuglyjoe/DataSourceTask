@@ -110,11 +110,10 @@ void DataSourceController::readData()
                     if (m_data_source_frm_processor->validateFrame(m_buffer[buf_num], ret_size))
                     {
                         // реєстрація блоків даних
-                        m_data_source_recorder->putNewFrame(*m_data_source_frm_processor->curProcessedFrame());
+                        m_data_source_recorder->putNewFrame(m_data_source_frm_processor->curProcessedFrame());
                     }
                     else
                     {
-
                     }
                 },
                 ret_size,

@@ -26,13 +26,13 @@ public:
     /// \brief Перевірка бракованих кадрів
     /// \param frm
     /// \param updated_size
-    bool validateFrame(std::shared_ptr<DataSourceBufferInterface> buffer, const int & updated_size);
+    bool validateFrame(const std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size);
 
     inline int frameSize() const { return m_frame_size; }
 
     inline int getPacketsLoss() const { return m_packets_loss; }
 
-    DataSourceBufferInterface * curProcessedFrame() { return m_buffer.get(); }
+    std::shared_ptr<DataSourceBuffer<float>> curProcessedFrame() const  { return m_buffer; }
 
     inline double elapsed() { return m_elapsed; }
 
@@ -46,7 +46,7 @@ private:
     int m_packets_loss = 0;
     double m_elapsed   = 0;
     std::mutex m_process_mutex;
-    std::shared_ptr<DATA_SOURCE_TASK::DataSourceBuffer<float>> m_buffer;  // дані будуть перетворені в float
+    std::shared_ptr<DataSourceBuffer<float>> m_buffer;  // дані будуть перетворені в float
 };
 
 } // namespace DATA_SOURCE_TASK

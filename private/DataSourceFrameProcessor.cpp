@@ -29,7 +29,8 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const
     m_buffer = std::make_shared<DataSourceBuffer<float>>(num_elements);
 }
 
-bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInterface> buffer, const int & updated_size)
+bool DataSourceFrameProcessor::validateFrame(
+    const std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
