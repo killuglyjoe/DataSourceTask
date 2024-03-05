@@ -4,6 +4,8 @@
 
 #include <cstring>
 #include <future>
+#include <iostream>
+#include <ostream>
 #include <thread>
 #include <atomic>
 
@@ -80,8 +82,14 @@ void DataSourceController::readData()
 
     std::future<void> future_result;
 
+    Timer timer;
+    timer.reset();
+
     while (is_read_active)
     {
+        m_elapsed = timer.elapsed();
+        // std::cout << " Process elapsed: " << m_elapsed << std::endl;
+        timer.reset();
         static int ret_size = 0;
 
         // - браковані кадри заповнювати нулями

@@ -38,15 +38,21 @@ public:
 
     inline int getPacketsLoss() const { return m_data_source_frm_processor->getPacketsLoss(); }
 
+    inline double elapsed() { return m_elapsed; }
+
 private:
     void readData();
 
 private:
     int m_byte_size;
+
+    double m_elapsed = 0;
+
     std::unique_ptr<DataSource> m_data_source;
     std::unique_ptr<DataSourceFrameProcessor> m_data_source_frm_processor;
     std::unique_ptr<DataSourceFrameRecorder> m_data_source_recorder;
     std::shared_ptr<DataSourceBufferInterface> m_buffer[MAX_READ_BUF_NUM];
+
     std::atomic<int> m_active_buffer; // поточний буфер для обробки
     std::mutex m_mutex;
 };

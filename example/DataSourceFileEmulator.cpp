@@ -66,9 +66,13 @@ DataSourceFileEmulator::DataSourceFileEmulator(
     m_write_thread = std::thread(&DataSourceFileEmulator::writeData, this);
 }
 
+Timer timer;
+
 std::mutex write_lock;
 void DataSourceFileEmulator::writeData()
 {
+    timer.reset();
+
     is_write_active = true;
 
     // Create a random number engine using the Mersenne Twister algorithm
@@ -102,6 +106,9 @@ void DataSourceFileEmulator::writeData()
     {
         // Write data to the file
         {
+            m_elapsed = timer.elapsed();
+            timer.reset();
+            // std::cout << " Write elapsed: " << m_elapsed << std::endl;
             // Згенеруємо випадкові числа
             for (int i = 0; i < m_buffer->payloadSize(); ++i)
             {
@@ -162,6 +169,7 @@ void DataSourceFileEmulator::writeData()
                 is_write_active = false;
                 throw std::runtime_error("DataSourceFileEmulatorFailed to open file for writing." + m_file_path);
             }
+
             m_buffer->setFrameCounter(++frm_counter);
         }
 

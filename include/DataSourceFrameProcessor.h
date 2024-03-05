@@ -34,6 +34,8 @@ public:
 
     DataSourceBufferInterface * curProcessedFrame() { return m_buffer.get(); }
 
+    inline double elapsed() { return m_elapsed; }
+
 private:
     /// \brief перетворення масиву цілих чисел в float[]
     /// \param payload - масив цілих чисел
@@ -42,7 +44,7 @@ private:
 private:
     int m_frame_size   = 0;
     int m_packets_loss = 0;
-
+    double m_elapsed   = 0;
     std::mutex m_process_mutex;
     std::shared_ptr<DATA_SOURCE_TASK::DataSourceBuffer<float>> m_buffer;  // дані будуть перетворені в float
 };

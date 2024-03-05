@@ -1,4 +1,6 @@
 #include "DataSourceFrameProcessor.h"
+#include <iostream>
+#include <ostream>
 
 #ifdef WITH_OPEN_GL
 #include "GL/gl.h"
@@ -30,6 +32,9 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const
 bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInterface> buffer, const int & updated_size)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
+
+    // Timer timer;
+    // timer.reset();
 
     frame * frm                = buffer->frame();
     char * payload             = buffer->payload();
@@ -67,6 +72,7 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
     if (frm->payload_type != PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT)
     {
         convertToFLoat(payload);
+
         return true;
     }
 

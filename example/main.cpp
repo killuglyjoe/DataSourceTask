@@ -53,12 +53,15 @@ int main(int argc, char ** argv)
             // Читимо консоль перед нови виводом даних
             system(CLEAR_CONSOLE);
 
-            std::cout << "Max elements in frame: " << MAX_PAYLOAD_SIZE_FLOAT << std::endl;
+            std::cout << "Max elements in frame: " << MAX_PAYLOAD_SIZE_FLOAT  << std::endl;
+            std::cout << "Elapsed time for frame write: " << file_data_source_emulator->elapsed() << std::endl;
 
             // Заголовок, к-сть обробленних кадрів, к-сть втрачених
             std::cout << "Frames recieved: " << data_source_processor->framesTotal() << std::endl;
             std::cout << "Frame head: " << std::hex << data_source_processor->header() << std::dec << std::endl;
             std::cout << "Frames loss: " << data_source_processor->getPacketsLoss() << std::endl;
+
+            std::cout << "Elapsed time for frame process: " << data_source_processor->elapsed() << std::endl;
 
             // пауза перед оновленням виводу
             std::this_thread::sleep_for(std::chrono::seconds(1));

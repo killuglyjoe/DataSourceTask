@@ -24,6 +24,8 @@ public:
 
     virtual ~DataSourceFileEmulator();
 
+    inline double elapsed() { return m_elapsed; }
+
 private:
     void writeData();
 
@@ -32,6 +34,7 @@ private:
     std::ofstream m_source_file;
     std::string m_file_path;
     std::thread m_write_thread;
+    double m_elapsed = 0;
     std::shared_ptr<DATA_SOURCE_TASK::DataSourceBufferInterface> m_buffer;
 };
 
