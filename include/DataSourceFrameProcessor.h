@@ -3,6 +3,7 @@
 
 #include "DataSourceBuffer.h"
 #include <memory>
+#include <mutex>
 
 namespace DATA_SOURCE_TASK
 {
@@ -20,7 +21,7 @@ class DataSourceFrameProcessor
 public:
     /// \brief Клас для роботи з отриманимим кадрами.
     DataSourceFrameProcessor(const int & frame_size, const int & num_elements);
-    virtual ~DataSourceFrameProcessor();
+    virtual ~DataSourceFrameProcessor() {}
 
     /// \brief Перевірка бракованих кадрів
     /// \param frm
@@ -41,6 +42,8 @@ private:
 private:
     int m_frame_size   = 0;
     int m_packets_loss = 0;
+
+    std::mutex m_process_mutex;
     std::shared_ptr<DATA_SOURCE_TASK::DataSourceBuffer<float>> m_buffer;  // дані будуть перетворені в float
 };
 

@@ -35,7 +35,7 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
     m_frame_record[2].id = 3;
 }
 
-DataSourceFrameRecorder::~DataSourceFrameRecorder() {}
+
 
 void DataSourceFrameRecorder::recordBlock()
 {
@@ -89,7 +89,6 @@ void DataSourceFrameRecorder::updateBufs(DataSourceBufferInterface & frame,
             {
                 num_data_store = availabale_in_data;
             }
-
 
            memcpy(buf->record_buffer.data() + buf->pos, frame.payload() + av_data_in_pos, num_data_store);
 

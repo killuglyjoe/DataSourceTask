@@ -1,5 +1,4 @@
 #include "DataSourceFrameProcessor.h"
-#include <mutex>
 
 #ifdef WITH_OPEN_GL
 #include "GL/gl.h"
@@ -28,12 +27,9 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const
     m_buffer = std::make_shared<DataSourceBuffer<float>>(num_elements);
 }
 
-DataSourceFrameProcessor::~DataSourceFrameProcessor() {}
-
-std::mutex mx;
 bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInterface> buffer, const int & updated_size)
 {
-    std::lock_guard<std::mutex> lock(mx);
+    std::lock_guard<std::mutex> lock(m_process_mutex);
 
     frame * frm                = buffer->frame();
     char * payload             = buffer->payload();
@@ -63,6 +59,7 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
         ++m_packets_loss;
     }
 
+    // оновимо заголовок
     memcpy(m_buffer->frame(), frm, sizeof(struct frame));
 
     // - реалізувати максимально обчислювально ефективне перетворення усіх даних
@@ -73,6 +70,7 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
         return true;
     }
 
+    // перекладемо дані якшо вони вже в форматі float
     memcpy(m_buffer->payload(), payload, sizeof(struct frame));
 
     return true;
