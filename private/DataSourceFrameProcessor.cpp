@@ -39,7 +39,7 @@ void DataSourceFrameProcessor::frameProcess()
                 m_data_source_recorder->putNewFrame(curProcessedFrame());
             }
 
-            m_elapsed = timer.elapsed_ms();
+            m_elapsed = timer.elapsed();
 
             m_need_validate = false;
         }

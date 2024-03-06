@@ -5,6 +5,7 @@
 #include "DataSourceBuffer.h"
 
 #include <fstream>
+#include <random>
 #include <thread>
 
 namespace DATA_SOURCE_TASK
@@ -34,7 +35,10 @@ protected:
     void updateBufs();
 
 private:
-    int m_byte_size  = 0;
+    int m_byte_size = 0;
+
+    std::mt19937 m_mt;
+    std::uniform_real_distribution<float> m_dist;
 
     std::thread m_write_thread;
 
