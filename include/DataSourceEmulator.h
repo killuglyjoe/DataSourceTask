@@ -1,12 +1,11 @@
 #ifndef DATASOURCEEMULATOR_H
 #define DATASOURCEEMULATOR_H
 
-#include "DataSourceFile.h"
+#include "DataSource.h"
 #include "DataSourceBuffer.h"
 
-#include <fstream>
 #include <random>
-#include <thread>
+#include <memory>
 
 namespace DATA_SOURCE_TASK
 {
@@ -20,10 +19,9 @@ public:
     /// \param s_type - тип джерела
     /// \param p_type - тип даних
     /// \param num_elements - к-сть відліків сигналу
-    DataSourceFileEmulator(
-        const DATA_SOURCE_TASK::SOURCE_TYPE & s_type,
-        const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
-        const int & num_elements);
+    DataSourceFileEmulator(const DATA_SOURCE_TASK::SOURCE_TYPE & s_type,
+                           const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
+                           const int & num_elements);
 
     virtual ~DataSourceFileEmulator();
 
@@ -40,9 +38,7 @@ private:
     std::mt19937 m_mt;
     std::uniform_real_distribution<float> m_dist;
 
-    std::thread m_write_thread;
-
-    std::shared_ptr<DATA_SOURCE_TASK::DataSourceBufferInterface> m_buffer;
+    std::shared_ptr<DataSourceBufferInterface> m_buffer;
 };
 
 } // namespace DATA_SOURCE_TASK

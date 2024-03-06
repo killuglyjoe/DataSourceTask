@@ -6,8 +6,6 @@
 #include <random>
 #include <thread>
 
-static std::atomic<bool> is_write_active {true};
-
 static constexpr int FRAME_RATE {1000 / 200}; // 200 Hz
 
 namespace DATA_SOURCE_TASK
@@ -73,20 +71,15 @@ DataSourceFileEmulator::DataSourceFileEmulator(
     {
         std::cout << "DataSourceFileEmulator: no frame" << std::endl;
     }
-
-    // Потік який оновлює данні
-    m_write_thread = std::thread(&DataSourceFileEmulator::updateData, this);
 }
 
 DataSourceFileEmulator::~DataSourceFileEmulator() { std::cout << "~DataSourceFileEmulator()" << std::endl; }
 
 Timer overall_timer; // між оновленням даних
-Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 
 void DataSourceFileEmulator::updateBufs()
 {
-    static int frm_counter = 0;
-    char * payload         = m_buffer->payload();
+    static int16_t frm_counter = 0;
 
     // Згенеруємо випадкові числа
     for (int i = 0; i < m_buffer->payloadSize(); ++i)
@@ -95,57 +88,63 @@ void DataSourceFileEmulator::updateBufs()
         switch (m_buffer->frame()->payload_type)
         {
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
-            memcpy(payload + i * sizeof(std::uint8_t), &val, sizeof(std::uint8_t));
-            break;
+        {
+            std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(m_buffer->payload());
+            std::uint8_t u8_val    = static_cast<std::uint8_t>(val);
+            payload[i]             = u8_val;
+        }
+        break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
-            memcpy(payload + i * sizeof(std::int16_t), &val, sizeof(std::int16_t));
-            break;
+        {
+            std::int16_t * payload = reinterpret_cast<std::int16_t *>(m_buffer->payload());
+            std::int16_t s16_val   = static_cast<std::int16_t>(val);
+            payload[i]             = s16_val;
+        }
+        break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
-            memcpy(payload + i * sizeof(std::int32_t), &val, sizeof(std::int32_t));
-            break;
+        {
+            std::int32_t * payload = reinterpret_cast<std::int32_t *>(m_buffer->payload());
+            std::int32_t s32_val   = static_cast<std::int32_t>(val);
+            payload[i]             = s32_val;
+        }
+        break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
-            memcpy(payload + i * sizeof(float), &val, sizeof(float));
-            break;
+        {
+            float * payload = reinterpret_cast<float *>(m_buffer->payload());
+            float fl_val    = static_cast<float>(val);
+            payload[i]      = fl_val;
+        }
+        break;
         default:
             break;
         }
     }
 
-    m_buffer->setFrameCounter(++frm_counter);
+    ++frm_counter;
+    if (frm_counter >= std::numeric_limits<int16_t>::max())
+        frm_counter = 0;
+
+    m_buffer->setFrameCounter(frm_counter);
 
     m_elapsed = overall_timer.elapsed();
     overall_timer.reset();
 }
 
-std::mutex update_lock;
-void DataSourceFileEmulator::updateData()
-{
-    overall_timer.reset();
-    diff_timer.reset();
-
-    is_write_active = true;
-
-    while (is_write_active)
-    {
-        std::lock_guard<std::mutex> lock(update_lock);
-
-        diff_timer.reset();
-
-        updateBufs();
-
-        double dif_ms = diff_timer.elapsed_ms();
-        if (dif_ms < FRAME_RATE)
-        {
-            std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_RATE - static_cast<int>(dif_ms))); // 200 Hz
-        }
-    }
-}
-
 std::mutex read_lock;
+Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 int DataSourceFileEmulator::read(char * data, int size)
 {
     std::lock_guard<std::mutex> lock(read_lock);
+
+    updateBufs();
+
     std::copy(m_buffer->data(), m_buffer->data() + size, data);
+
+    double dif_ms = diff_timer.elapsed_ms();
+    if (dif_ms < FRAME_RATE)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_RATE - static_cast<int>(dif_ms))); // 200 Hz
+    }
 
     return size;
 }
