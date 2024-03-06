@@ -21,11 +21,44 @@ DataSourceController::DataSourceController(
     const std::string & source_path,
     const SOURCE_TYPE & source_type,
     const PAYLOAD_TYPE & p_type,
-    const int & num_elements):
+    const uint32_t & frame_size):
     m_active_buffer {0}
 {
+    m_payload_byte_size        = frame_size - sizeof(struct frame);
+
     try
     {
+        // виділимо данні
+        switch (p_type)
+        {
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
+        {
+            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+                m_buffer[i] = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
+        }
+        break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
+        {
+            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+                m_buffer[i] = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
+        }
+        break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
+        {
+            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+                m_buffer[i] = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
+        }
+        break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
+        {
+            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+                m_buffer[i] = std::make_shared<DataSourceBuffer<float>>(frame_size);
+            break;
+        }
+        default:
+            break;
+        }
+
         // Створимо джерело даних
         switch (source_type)
         {
@@ -34,34 +67,7 @@ DataSourceController::DataSourceController(
             break;
 
         case SOURCE_TYPE::SOURCE_TYPE_EMULATOR:
-            m_data_source = std::make_unique<DataSourceFileEmulator>(source_type, p_type, num_elements);
-            break;
-        default:
-            break;
-        }
-
-        // виділимо данні
-        switch (p_type)
-        {
-        case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
-            m_byte_size = num_elements * sizeof(std::uint8_t);
-            for (std::size_t i = 0; i < MAX_READ_BUF_NUM; ++i)
-                m_buffer[i] = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::uint8_t>>(num_elements);
-            break;
-        case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
-            m_byte_size = num_elements * sizeof(std::int16_t);
-            for (std::size_t i = 0; i < MAX_READ_BUF_NUM; ++i)
-                m_buffer[i] = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int16_t>>(num_elements);
-            break;
-        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
-            m_byte_size = num_elements * sizeof(std::int32_t);
-            for (std::size_t i = 0; i < MAX_READ_BUF_NUM; ++i)
-                m_buffer[i] = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int32_t>>(num_elements);
-            break;
-        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
-            m_byte_size = num_elements * sizeof(float);
-            for (std::size_t i = 0; i < MAX_READ_BUF_NUM; ++i)
-                m_buffer[i] = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<float>>(num_elements);
+            m_data_source = std::make_unique<DataSourceFileEmulator>(source_type, p_type, frame_size);
             break;
         default:
             break;
@@ -72,7 +78,7 @@ DataSourceController::DataSourceController(
         std::runtime_error(e.what()); // треба використовувати власні обгортки над стандартнимим виключеннями
     }
 
-    m_data_source_frm_processor = std::make_unique<DataSourceFrameProcessor>(m_buffer[0]->size(), num_elements);
+    m_data_source_frm_processor = std::make_unique<DataSourceFrameProcessor>(frame_size, p_type);
 
     // - організувати зчитування даних в окремому потоці;
     // Потік який читає данні
@@ -94,26 +100,24 @@ void DataSourceController::readData()
 
         std::lock_guard<std::mutex> lock(read_lock);
 
-        // - браковані кадри заповнювати нулями
-        memset(m_buffer[m_active_buffer]->payload(), 0, m_byte_size);
-
         timer.reset();
+
+        // - браковані кадри заповнювати нулями
+        memset(m_buffer[m_active_buffer]->payload(), 0, m_payload_byte_size);
+
         // читаємо з джерела
         ret_size = m_data_source->read(m_buffer[m_active_buffer]->data(), m_buffer[m_active_buffer]->size());
 
-        m_elapsed = timer.elapsed();
-
         if (ret_size != static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR))
         {
-            int buf_num = m_active_buffer;
-
             // обробка даних
-            m_data_source_frm_processor->putNewFrame(m_buffer[buf_num], ret_size);
-            m_elapsed = timer.elapsed();
+            m_data_source_frm_processor->putNewFrame(m_buffer[m_active_buffer], ret_size);
         }
 
+        m_elapsed = timer.elapsed();
+
         ++m_active_buffer;
-        if (m_active_buffer == MAX_READ_BUF_NUM)
+        if (m_active_buffer == MAX_PROCESSING_BUF_NUM)
             m_active_buffer = 0;
     }
 }

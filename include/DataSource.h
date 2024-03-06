@@ -2,7 +2,6 @@
 #define DATASOURCE_H
 
 #include "globals.h"
-#include <mutex>
 
 namespace DATA_SOURCE_TASK
 {

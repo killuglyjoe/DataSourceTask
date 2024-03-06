@@ -14,7 +14,7 @@ namespace DATA_SOURCE_TASK
 DataSourceFileEmulator::DataSourceFileEmulator(
     const DATA_SOURCE_TASK::SOURCE_TYPE & s_type,
     const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
-    const int & num_elements):
+    const int & payload_size):
     DataSource(s_type)
 {
     try
@@ -29,26 +29,22 @@ DataSourceFileEmulator::DataSourceFileEmulator(
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
             // Create a uniform distribution for generating float numbers in the range
             m_dist      = std::uniform_real_distribution<float>(0, 254);
-            m_byte_size = num_elements * sizeof(std::uint8_t);
-            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::uint8_t>>(num_elements);
+            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::uint8_t>>(payload_size/sizeof(std::uint8_t));
             break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
             // Create a uniform distribution for generating float numbers in the range
             m_dist      = std::uniform_real_distribution<float>(-1450.13f, 1450.13f);
-            m_byte_size = num_elements * sizeof(std::int16_t);
-            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int16_t>>(num_elements);
+            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int16_t>>(payload_size/sizeof(std::int16_t));
             break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
             // Create a uniform distribution for generating float numbers in the range
             m_dist      = std::uniform_real_distribution<float>(-1450.13f, 1450.13f);
-            m_byte_size = num_elements * sizeof(std::int32_t);
-            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int32_t>>(num_elements);
+            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int32_t>>(payload_size/sizeof(std::int32_t));
             break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
             // Create a uniform distribution for generating float numbers in the range
             m_dist      = std::uniform_real_distribution<float>(-100.0f, 150.13f);
-            m_byte_size = num_elements * sizeof(float);
-            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<float>>(num_elements);
+            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<float>>(payload_size/sizeof(float));
             break;
         default:
             break;
@@ -65,7 +61,7 @@ DataSourceFileEmulator::DataSourceFileEmulator(
         m_buffer->setFrameCounter(0);
         m_buffer->setSourceID(s_type);
         m_buffer->setPayloadType(p_type);
-        m_buffer->setPayloadSize(num_elements);
+        m_buffer->setPayloadSize(payload_size);
     }
     else
     {
@@ -79,10 +75,12 @@ DataSourceFileEmulator::~DataSourceFileEmulator() { std::cout << "~DataSourceFil
 
 void DataSourceFileEmulator::generateRandom()
 {
+    static float val = 1.2;
+    // ++val;
     // Згенеруємо випадкові числа
-    for (uint32_t i = 0; i < m_buffer->payloadSize(); ++i)
+    for (uint32_t i = 0; i < m_buffer->totalElements(); ++i)
     {
-        float val = m_dist(m_mt);
+        // float val = m_dist(m_mt);
         switch (m_buffer->frame()->payload_type)
         {
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
@@ -125,7 +123,7 @@ void DataSourceFileEmulator::updateBufs()
 {
     static uint16_t frm_counter = 0;
 
-    generateRandom();
+    // generateRandom();
 
     ++frm_counter;
     if (frm_counter >= UINT16_MAX)
@@ -145,6 +143,9 @@ int DataSourceFileEmulator::read(char * data, int size)
 
     m_elapsed = 0;
     updateBufs();
+
+    // - результат DataSource::read() непередбачуваний, близький до реальної ситуації, може варіюватись у межах 0..size;
+    // int ret_size = size; // size / 2;
 
     std::copy(m_buffer->data(), m_buffer->data() + size, data);
 

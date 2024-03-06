@@ -23,21 +23,22 @@ class DataSourceFrameProcessor
 {
 public:
     /// \brief Клас для роботи з отриманимим кадрами.
-    DataSourceFrameProcessor(const int & frame_size, const int & num_elements);
+    DataSourceFrameProcessor(const int & frame_size,
+                             const PAYLOAD_TYPE & p_type);
     virtual ~DataSourceFrameProcessor();
 
     /// \brief Перевірка бракованих кадрів
     /// \param frm
     /// \param updated_size
-    bool validateFrame(DataSourceBufferInterface * buffer, const int & updated_size);
+    bool validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size);
 
     inline int frameSize() const { return m_frame_size; }
 
     inline int getPacketsLoss() const { return m_packets_loss; }
 
-    std::shared_ptr<DataSourceBuffer<float>> curProcessedFrame() const { return m_buffer[m_ready_buffer]; }
+    std::shared_ptr<DataSourceBuffer<float>> curProcessedFrame() const { return m_buffer[m_flt_ready_buffer]; }
 
-    void putNewFrame(const std::shared_ptr<DataSourceBufferInterface> & buffer,  const int & updated_size);
+    void putNewFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size);
 
     inline double elapsed() { return m_elapsed; }
 
@@ -59,10 +60,12 @@ private:
 
     std::atomic<bool> m_need_validate;
     std::atomic<int> m_req_size;
-    DataSourceBufferInterface * m_buffer_to_process;
 
-    std::atomic<int> m_ready_buffer;
-    std::shared_ptr<DataSourceBuffer<float>> m_buffer[2]; // дані будуть перетворені в float
+    std::atomic<int> m_src_ready_buffer;
+    std::shared_ptr<DataSourceBufferInterface> m_source_buffer[MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
+
+    std::atomic<int> m_flt_ready_buffer;
+    std::shared_ptr<DataSourceBuffer<float>> m_buffer[MAX_PROCESSING_BUF_NUM]; // дані будуть перетворені в float
 
     std::unique_ptr<DataSourceFrameRecorder> m_data_source_recorder;
 };

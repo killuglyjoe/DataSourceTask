@@ -7,6 +7,7 @@
 
 namespace DATA_SOURCE_TASK
 {
+
 class Timer
 {
 public:
@@ -19,6 +20,8 @@ public:
         m_is_valid = true;
     }
 
+    /// \brief Пройдений час в мілісекундах
+    /// \return
     std::int64_t elapsed() const
     {
         if (isValid())
@@ -31,10 +34,41 @@ public:
         return std::numeric_limits<int64_t>::max();
     }
 
+    /// \brief Пройдений час в мікросекундах
+    /// \return
+    std::int64_t elapsed_us() const
+    {
+        if (isValid())
+        {
+            std::chrono::time_point<std::chrono::system_clock> end;
+            end = std::chrono::system_clock::now();
+
+            return std::chrono::duration_cast<std::chrono::microseconds>(end - m_start).count();
+        }
+        return std::numeric_limits<int64_t>::max();
+    }
+
+    /// \brief Пройдений час в секундах
+    /// \return
+    std::int64_t elapsed_s() const
+    {
+        if (isValid())
+        {
+            std::chrono::time_point<std::chrono::system_clock> end;
+            end = std::chrono::system_clock::now();
+
+            return std::chrono::duration_cast<std::chrono::seconds>(end - m_start).count();
+        }
+        return std::numeric_limits<int64_t>::max();
+    }
+
 private:
     std::atomic<bool> m_is_valid;
     std::chrono::time_point<std::chrono::system_clock> m_start;
 };
+
+// К-сть буферів під читання/обробку
+static constexpr std::size_t MAX_PROCESSING_BUF_NUM {2};
 
 // максимальний розмір запитуваних даних size обмежується ресурсами обчислювальної системи
 static constexpr std::uint32_t MAX_DATA_SIZE {20 * 1024};

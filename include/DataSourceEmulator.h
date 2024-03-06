@@ -18,10 +18,11 @@ public:
     /// \brief Емулятор певного джерела
     /// \param s_type - тип джерела
     /// \param p_type - тип даних
-    /// \param num_elements - к-сть відліків сигналу
-    DataSourceFileEmulator(const DATA_SOURCE_TASK::SOURCE_TYPE & s_type,
-                           const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
-                           const int & num_elements);
+    /// \param payload_size - к-сть відліків сигналу
+    DataSourceFileEmulator(
+        const DATA_SOURCE_TASK::SOURCE_TYPE & s_type,
+        const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
+        const int & payload_size);
 
     virtual ~DataSourceFileEmulator();
 

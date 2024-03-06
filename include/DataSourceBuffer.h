@@ -10,11 +10,18 @@ class DataSourceBufferInterface
 {
 public:
     DataSourceBufferInterface() {}
+    DataSourceBufferInterface & operator=(DataSourceBufferInterface & other)
+    {
+        buffer.swap(other.buffer);
+        return *this;
+    }
+    DataSourceBufferInterface(DataSourceBufferInterface & other) noexcept { buffer.swap(other.buffer); }
+    DataSourceBufferInterface(DataSourceBufferInterface && other) noexcept { buffer.swap(other.buffer); }
     virtual ~DataSourceBufferInterface() = default;
 
     inline struct frame * frame() { return m_frame; };
 
-    /// \brief Фугкція повертає заголовок фрейму
+    /// \brief Функція повертає заголовок фрейму
     /// \return
     inline std::uint32_t header() const
     {
@@ -23,14 +30,14 @@ public:
 
         return -1;
     }
-    /// \brief
+    /// \brief Задамо заголовок кадру
     /// \return
     void setHeader(const std::uint32_t & header)
     {
         if (m_frame)
             m_frame->magic_word = header;
     }
-    /// \brief
+    /// \brief Лічильник кадрів
     /// \return
     inline std::uint16_t frameCounter() const
     {
@@ -39,14 +46,14 @@ public:
 
         return -1;
     }
-    /// \brief
+    /// \brief Задамо лічильник кадрів
     /// \return
     void setFrameCounter(const std::uint16_t & cntr)
     {
         if (m_frame)
             m_frame->frame_counter = cntr;
     }
-    /// \brief
+    /// \brief ІД джерела
     /// \return
     inline SOURCE_TYPE sourceId() const
     {
@@ -55,13 +62,13 @@ public:
 
         return SOURCE_TYPE::SOURCE_TYPE_UNDEFINED;
     }
-    /// \brief
+    /// \brief Задамо ІД джерела
     void setSourceID(const SOURCE_TYPE & source_type)
     {
         if (m_frame)
             m_frame->source_id = source_type;
     }
-    /// \brief
+    /// \brief Тип даних
     /// \return
     inline PAYLOAD_TYPE payloadType() const
     {
@@ -70,13 +77,13 @@ public:
 
         return PAYLOAD_TYPE::PAYLOAD_TYPE_UNSUPPORTED;
     }
-    /// \brief
+    /// \brief Запишемо тип даних відліків сигналу
     void setPayloadType(const PAYLOAD_TYPE & payload_type)
     {
         if (m_frame)
             m_frame->payload_type = payload_type;
     }
-    /// \brief
+    /// \brief Розмір даних без заголовку
     /// \return
     inline std::uint32_t payloadSize() const
     {
@@ -86,7 +93,7 @@ public:
         return -1;
     }
 
-    /// \brief
+    /// \brief Задамо розмір даних
     void setPayloadSize(const std::int32_t & size)
     {
         if (m_frame)
@@ -95,35 +102,41 @@ public:
 
     /// \brief Вказівник на дані
     /// \return
-    char * payload() {return m_payload;}
+    char * payload() { return m_payload; }
 
-    char * payload() const {return m_payload;}
+    char * payload() const { return m_payload; }
 
     /// \brief Розмір типу даних
     /// \return
     inline std::uint8_t typeSize() { return m_type_size; }
 
-    inline int size() const { return m_size; };
+    inline int size() const { return m_frame_size; };
     inline char * data() { return buffer.data(); }
 
+    /// \brief К-сть відліків сигналу
+    /// \return
+    std::uint32_t totalElements() const { return m_elements_num; };
+
 protected:
-    std::vector<char> buffer;     // весь масив даних
-    int m_size               = 0; // розмір всього блоку даних
-    std::uint8_t m_type_size = 0; // sizeof(uint8_t), sizeof(uint16_t) ...
-    struct frame * m_frame;       // вказівник на заголовок
-    char         *m_payload;      // вказівник на дані оцифрованих відліків
+    std::vector<char> buffer;         // весь масив даних
+    std::uint32_t m_frame_size   = 0; // розмір всього блоку даних
+    std::uint32_t m_elements_num = 0; // к-сть відліків сигналу
+    std::uint8_t m_type_size     = 0; // sizeof(uint8_t), sizeof(uint16_t) ...
+    struct frame * m_frame;           // вказівник на заголовок
+    char * m_payload;                 // вказівник на дані оцифрованих відліків
 };
 
 template<typename T>
 class DataSourceBuffer : public DataSourceBufferInterface
 {
 public:
-    DataSourceBuffer(const int & num_elements):
+    DataSourceBuffer(const std::int32_t & frame_size):
         DataSourceBufferInterface()
     {
-        m_type_size = sizeof(T);
-        m_size      = sizeof(struct frame) + m_type_size * num_elements;
-        buffer.resize(m_size);
+        m_frame_size   = frame_size;
+        m_type_size    = sizeof(T);
+        m_elements_num = (m_frame_size - sizeof(struct frame)) / m_type_size;
+        buffer.resize(m_frame_size);
 
         m_frame   = reinterpret_cast<struct frame *>(buffer.data());
         m_payload = reinterpret_cast<char *>(buffer.data() + sizeof(struct frame));

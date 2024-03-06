@@ -13,10 +13,10 @@ static constexpr const char * FILE_SOURCE = "dev";
 // 200 Гц - частота видачі кадрів
 
 // Максимальний розмір кадру = (100×1024×1024) / 200 = 512 * 1024 Байт
-static constexpr int MAX_PAYLOAD_SIZE_FLOAT {((512 * 1024) - sizeof(DATA_SOURCE_TASK::frame)) / sizeof(float)};
+static constexpr int MAX_FRAME_SIZE {((512 * 1024))};
 
 // Мінімальний розмір кадру = (10×1024×1024) / 200 = 51 * 1024 Байт
-static constexpr int MIN_PAYLOAD_SIZE_FLOAT {((51 * 1024) - sizeof(DATA_SOURCE_TASK::frame)) / sizeof(float)};
+static constexpr int MIN_FRAME_SIZE {((51 * 1024))};
 
 #ifdef _WIN32
 // For Windows
@@ -42,12 +42,12 @@ int main(int argc, char ** argv)
 #if 0
         // Емулятор джерела даних
         std::unique_ptr<DataSourceFileEmulator> file_data_source_emulator
-            = std::make_unique<DataSourceFileEmulator>(FILE_SOURCE, s_type, p_type, MAX_PAYLOAD_SIZE_FLOAT);
+            = std::make_unique<DataSourceFileEmulator>(FILE_SOURCE, s_type, p_type, MAX_FRAME_SIZE);
 #endif
 
         // Обробка фреймів з джерела
-        std::unique_ptr<DATA_SOURCE_TASK::DataSourceController> data_source_processor = std::make_unique<
-            DATA_SOURCE_TASK::DataSourceController>(FILE_SOURCE, s_type, p_type, MAX_PAYLOAD_SIZE_FLOAT);
+        std::unique_ptr<DATA_SOURCE_TASK::DataSourceController> data_source_processor
+            = std::make_unique<DATA_SOURCE_TASK::DataSourceController>(FILE_SOURCE, s_type, p_type, MAX_FRAME_SIZE);
 
         // Вивід результатів в консоль
         for (;;)
@@ -55,8 +55,9 @@ int main(int argc, char ** argv)
             // Читимо консоль перед нови виводом даних
             system(CLEAR_CONSOLE);
 
-            std::cout << "Max elements in frame: " << MAX_PAYLOAD_SIZE_FLOAT << std::endl;
-            std::cout << "Elapsed time for frame write: " << data_source_processor->/*dataSource().*/elapsed() << std::endl;
+            std::cout << "Frame size: " << MAX_FRAME_SIZE << std::endl;
+            std::cout << "Elapsed time for frame write: " << data_source_processor->dataSource().elapsed() << std::endl;
+            std::cout << "Elapsed time for frame read: " << data_source_processor->elapsed() << std::endl;
 
             // Заголовок, к-сть обробленних кадрів, к-сть втрачених
             std::cout << "Frames recieved: " << data_source_processor->framesTotal() << std::endl;
