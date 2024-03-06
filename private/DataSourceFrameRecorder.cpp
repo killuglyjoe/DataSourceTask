@@ -17,6 +17,7 @@ size_t nearestPowerOfTwo(const size_t & n)
 
     return static_cast<size_t>(std::pow(2, std::ceil(std::log2(n))) / 2.);
 }
+
 // Активатор потоку запису
 static std::atomic<bool> is_can_record_active;
 

@@ -181,9 +181,9 @@ void DataSourceFileEmulator::writeData()
             m_buffer->setFrameCounter(++frm_counter);
         }
 
-        double dif_ms = diff_timer.elapsed_ms();
-        if (dif_ms < FRAME_RATE)
-            std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_RATE - static_cast<int>(dif_ms))); // 200 Hz
+        while (diff_timer.elapsed() < FRAME_RATE)
+        { // 200 Hz
+        }
     }
 }
 

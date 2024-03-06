@@ -48,7 +48,7 @@ private:
 private:
     int m_byte_size;
 
-    double m_elapsed = 0;
+    std::atomic<int> m_elapsed;
 
     std::unique_ptr<DataSource> m_data_source;
     std::unique_ptr<DataSourceFrameProcessor> m_data_source_frm_processor;

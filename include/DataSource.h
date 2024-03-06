@@ -2,6 +2,7 @@
 #define DATASOURCE_H
 
 #include "globals.h"
+#include <mutex>
 
 namespace DATA_SOURCE_TASK
 {
@@ -27,7 +28,7 @@ public:
     inline SOURCE_TYPE sourceType() const { return m_source_type; }
 
 protected:
-    double m_elapsed;
+    std::atomic<int> m_elapsed;
 
 private:
     SOURCE_TYPE m_source_type;

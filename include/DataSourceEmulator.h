@@ -32,6 +32,8 @@ protected:
 
     void updateBufs();
 
+    void generateRandom();
+
 private:
     int m_byte_size = 0;
 

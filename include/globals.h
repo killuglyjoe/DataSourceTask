@@ -1,36 +1,41 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
+#include <atomic>
+#include <chrono>
 #include <cstdint>
-#include <ctime>
 
 namespace DATA_SOURCE_TASK
 {
 class Timer
 {
 public:
-    Timer() { clock_gettime(CLOCK_REALTIME, &beg_); }
+    Timer() { reset(); }
 
-    /// \brief Пройдений час в секундах
-    /// \return
-    double elapsed()
+    bool isValid() const { return m_is_valid; }
+    void reset()
     {
-        clock_gettime(CLOCK_REALTIME, &end_);
-        return end_.tv_sec - beg_.tv_sec + (end_.tv_nsec - beg_.tv_nsec) / 1000000000.;
-    }
-    /// \brief Пройдений час в мілісекундах
-    /// \return
-    double elapsed_ms()
-    {
-        clock_gettime(CLOCK_REALTIME, &end_);
-        return end_.tv_sec - beg_.tv_sec + (end_.tv_nsec - beg_.tv_nsec) / 1000000.;
+        m_start    = std::chrono::system_clock::now();
+        m_is_valid = true;
     }
 
-    void reset() { clock_gettime(CLOCK_REALTIME, &beg_); }
+    std::int64_t elapsed() const
+    {
+        if (isValid())
+        {
+            std::chrono::time_point<std::chrono::system_clock> end;
+            end = std::chrono::system_clock::now();
+
+            return std::chrono::duration_cast<std::chrono::milliseconds>(end - m_start).count();
+        }
+        return std::numeric_limits<int64_t>::max();
+    }
 
 private:
-    timespec beg_, end_;
+    std::atomic<bool> m_is_valid;
+    std::chrono::time_point<std::chrono::system_clock> m_start;
 };
+
 // максимальний розмір запитуваних даних size обмежується ресурсами обчислювальної системи
 static constexpr std::uint32_t MAX_DATA_SIZE {20 * 1024};
 
@@ -66,8 +71,8 @@ struct frame
     SOURCE_TYPE source_id;       // ідентифікатор походження (source_id) 1 байт;
     PAYLOAD_TYPE payload_type;   // тип даних (payload_type) 1 байт;
     std::uint32_t payload_size; // розмір блоку даних корисного навантаження (payload_size) 4 байти;
-    void * payload;             // дані payload являють собою оцифовані відліки сигналу.
-                                // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
+    void * payload; // дані payload являють собою оцифовані відліки сигналу.
+                    // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
 };
 #pragma pack()
 

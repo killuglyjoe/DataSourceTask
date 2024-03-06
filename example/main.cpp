@@ -56,7 +56,7 @@ int main(int argc, char ** argv)
             system(CLEAR_CONSOLE);
 
             std::cout << "Max elements in frame: " << MAX_PAYLOAD_SIZE_FLOAT << std::endl;
-            std::cout << "Elapsed time for frame write: " << data_source_processor->dataSource().elapsed() << std::endl;
+            std::cout << "Elapsed time for frame write: " << data_source_processor->/*dataSource().*/elapsed() << std::endl;
 
             // Заголовок, к-сть обробленних кадрів, к-сть втрачених
             std::cout << "Frames recieved: " << data_source_processor->framesTotal() << std::endl;

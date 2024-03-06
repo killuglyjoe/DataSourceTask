@@ -86,20 +86,26 @@ void DataSourceController::readData()
     Timer timer;
     timer.reset();
 
+    std::mutex read_lock;
+
     while (is_read_active)
     {
-        timer.reset();
         static int ret_size = 0;
+
+        std::lock_guard<std::mutex> lock(read_lock);
 
         // - браковані кадри заповнювати нулями
         memset(m_buffer[m_active_buffer]->payload(), 0, m_byte_size);
 
+        timer.reset();
         // читаємо з джерела
         ret_size = m_data_source->read(m_buffer[m_active_buffer]->data(), m_buffer[m_active_buffer]->size());
 
+        m_elapsed = timer.elapsed();
+
         if (ret_size != static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR))
         {
-            int buf_num   = m_active_buffer;
+            int buf_num = m_active_buffer;
 
             // обробка даних
             m_data_source_frm_processor->putNewFrame(m_buffer[buf_num], ret_size);

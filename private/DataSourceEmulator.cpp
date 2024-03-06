@@ -6,7 +6,7 @@
 #include <random>
 #include <thread>
 
-static constexpr int FRAME_RATE {1000 / 200}; // 200 Hz
+static constexpr int FRAME_RATE {1000 / 200}; // 200 Hz = 5ms
 
 namespace DATA_SOURCE_TASK
 {
@@ -71,16 +71,14 @@ DataSourceFileEmulator::DataSourceFileEmulator(
     {
         std::cout << "DataSourceFileEmulator: no frame" << std::endl;
     }
+
+    generateRandom();
 }
 
 DataSourceFileEmulator::~DataSourceFileEmulator() { std::cout << "~DataSourceFileEmulator()" << std::endl; }
 
-Timer overall_timer; // між оновленням даних
-
-void DataSourceFileEmulator::updateBufs()
+void DataSourceFileEmulator::generateRandom()
 {
-    static uint16_t frm_counter = 0;
-
     // Згенеруємо випадкові числа
     for (uint32_t i = 0; i < m_buffer->payloadSize(); ++i)
     {
@@ -119,31 +117,40 @@ void DataSourceFileEmulator::updateBufs()
             break;
         }
     }
+}
+
+Timer overall_timer; // між оновленням даних
+
+void DataSourceFileEmulator::updateBufs()
+{
+    static uint16_t frm_counter = 0;
+
+    generateRandom();
 
     ++frm_counter;
     if (frm_counter >= UINT16_MAX)
         frm_counter = 0;
 
     m_buffer->setFrameCounter(frm_counter);
-
-    m_elapsed = overall_timer.elapsed();
-    overall_timer.reset();
 }
 
 std::mutex read_lock;
-Timer diff_timer;    // для вирівнювання sleep До 200 Гц
+Timer diff_timer; // для вирівнювання sleep До 200 Гц
 int DataSourceFileEmulator::read(char * data, int size)
 {
     std::lock_guard<std::mutex> lock(read_lock);
 
+    overall_timer.reset();
+    diff_timer.reset();
+
+    m_elapsed = 0;
     updateBufs();
 
     std::copy(m_buffer->data(), m_buffer->data() + size, data);
 
-    double dif_ms = diff_timer.elapsed_ms();
-    if (dif_ms < FRAME_RATE)
+    while (m_elapsed < FRAME_RATE)
     {
-        std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_RATE - static_cast<int>(dif_ms))); // 200 Hz
+        m_elapsed = overall_timer.elapsed();
     }
 
     return size;
