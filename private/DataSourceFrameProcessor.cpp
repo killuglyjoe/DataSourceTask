@@ -85,6 +85,7 @@ bool DataSourceFrameProcessor::validateFrame(DataSourceBufferInterface * buffer,
         m_ready_buffer = 0;
 
     DataSourceBuffer<float> * cur_buf = m_buffer[m_ready_buffer].get();
+
     // оновимо заголовок
     std::copy(frm, frm + sizeof(struct frame), cur_buf->frame());
 
@@ -107,8 +108,8 @@ bool DataSourceFrameProcessor::validateFrame(DataSourceBufferInterface * buffer,
     return true;
 }
 
-void DataSourceFrameProcessor::putNewFrame(
-    const std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)
+void DataSourceFrameProcessor::putNewFrame(const std::shared_ptr<DataSourceBufferInterface> & buffer,
+                                           const int & updated_size)
 {
     m_buffer_to_process = buffer.get();
     m_req_size          = updated_size;

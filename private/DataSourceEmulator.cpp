@@ -63,27 +63,24 @@ DataSourceFileEmulator::DataSourceFileEmulator(
     }
 
     // Потік який оновлює данні
-    m_write_thread = std::thread(&DataSourceFileEmulator::updateData, this);
+    // m_write_thread = std::thread(&DataSourceFileEmulator::updateData, this);
 }
 
 DataSourceFileEmulator::~DataSourceFileEmulator() { std::cout << "~DataSourceFileEmulator()" << std::endl; }
 
-Timer overall_timer; // між записом в файл
+Timer overall_timer; // між записом в
 Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 
-std::mutex update_lock;
-void DataSourceFileEmulator::updateData()
+// Create a random number engine using the Mersenne Twister algorithm
+std::random_device rd;
+std::mt19937 mt(rd());
+std::uniform_real_distribution<float> dist;
+
+void DataSourceFileEmulator::updateBufs()
 {
-    overall_timer.reset();
-    diff_timer.reset();
+    static int frm_counter = 0;
+    char * payload         = m_buffer->payload();
 
-    is_write_active = true;
-
-    // Create a random number engine using the Mersenne Twister algorithm
-    std::random_device rd;
-    std::mt19937 mt(rd());
-
-    std::uniform_real_distribution<float> dist;
     // Create a uniform distribution for generating float numbers in the range
     switch (m_buffer->frame()->payload_type)
     {
@@ -102,44 +99,56 @@ void DataSourceFileEmulator::updateData()
         break;
     }
 
-    static int frm_counter = 0;
-    char * payload         = m_buffer->payload();
+    // Згенеруємо випадкові числа
+    for (int i = 0; i < m_buffer->payloadSize(); ++i)
+    {
+        float val = dist(mt);
+        switch (m_buffer->frame()->payload_type)
+        {
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
+            memcpy(payload + i * sizeof(std::uint8_t), &val, sizeof(std::uint8_t));
+            break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
+            memcpy(payload + i * sizeof(std::int16_t), &val, sizeof(std::int16_t));
+            break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
+            memcpy(payload + i * sizeof(std::int32_t), &val, sizeof(std::int32_t));
+            break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
+            memcpy(payload + i * sizeof(float), &val, sizeof(float));
+            break;
+        default:
+            break;
+        }
+    }
+
+    m_buffer->setFrameCounter(++frm_counter);
+
+    m_elapsed = overall_timer.elapsed();
+    overall_timer.reset();
+}
+
+std::mutex update_lock;
+
+void DataSourceFileEmulator::updateData()
+{
+    overall_timer.reset();
+    diff_timer.reset();
+
+    is_write_active = true;
 
     while (is_write_active)
     {
         std::lock_guard<std::mutex> lock(update_lock);
-        diff_timer.reset();
-        // Згенеруємо випадкові числа
-        for (int i = 0; i < m_buffer->payloadSize(); ++i)
-        {
-            float val = dist(mt);
-            switch (m_buffer->frame()->payload_type)
-            {
-            case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
-                memcpy(payload + i * sizeof(std::uint8_t), &val, sizeof(std::uint8_t));
-                break;
-            case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
-                memcpy(payload + i * sizeof(std::int16_t), &val, sizeof(std::int16_t));
-                break;
-            case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
-                memcpy(payload + i * sizeof(std::int32_t), &val, sizeof(std::int32_t));
-                break;
-            case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
-                memcpy(payload + i * sizeof(float), &val, sizeof(float));
-                break;
-            default:
-                break;
-            }
-        }
 
-        m_buffer->setFrameCounter(++frm_counter);
+        diff_timer.reset();
+
+        updateBufs();
 
         double dif_ms = diff_timer.elapsed_ms();
         if (dif_ms < FRAME_RATE)
             std::this_thread::sleep_for(std::chrono::milliseconds(FRAME_RATE - static_cast<int>(dif_ms))); // 200 Hz
 
-        m_elapsed = overall_timer.elapsed();
-        overall_timer.reset();
     }
 }
 
@@ -147,6 +156,7 @@ std::mutex read_lock;
 int DataSourceFileEmulator::read(char * data, int size)
 {
     std::lock_guard<std::mutex> lock(read_lock);
+    updateBufs();
     std::copy(m_buffer->data(), m_buffer->data() + size, data);
 
     return size;

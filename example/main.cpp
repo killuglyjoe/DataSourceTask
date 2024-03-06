@@ -1,4 +1,5 @@
 #include "DataSourceController.h"
+#include "DataSourceFileEmulator.h"
 
 #include <chrono>
 #include <iostream>
@@ -38,6 +39,12 @@ int main(int argc, char ** argv)
 
     try
     {
+#if 0
+        // Емулятор джерела даних
+        std::unique_ptr<DataSourceFileEmulator> file_data_source_emulator
+            = std::make_unique<DataSourceFileEmulator>(FILE_SOURCE, s_type, p_type, MAX_PAYLOAD_SIZE_FLOAT);
+#endif
+
         // Обробка фреймів з джерела
         std::unique_ptr<DATA_SOURCE_TASK::DataSourceController> data_source_processor = std::make_unique<
             DATA_SOURCE_TASK::DataSourceController>(FILE_SOURCE, s_type, p_type, MAX_PAYLOAD_SIZE_FLOAT);

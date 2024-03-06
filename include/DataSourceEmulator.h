@@ -31,6 +31,8 @@ public:
 protected:
     void updateData();
 
+    void updateBufs();
+
 private:
     int m_byte_size  = 0;
 
