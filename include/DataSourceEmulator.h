@@ -12,17 +12,17 @@ namespace DATA_SOURCE_TASK
 
 /// \brief Клас емулює роботу зовнішноього джарела даних.
 /// В потоці йде запис в файл заданого кадру з данимим.
-class DataSourceFileEmulator : public DataSource
+class DataSourceFileEmulator final : public DataSource
 {
 public:
     /// \brief Емулятор певного джерела
     /// \param s_type - тип джерела
     /// \param p_type - тип даних
-    /// \param payload_size - к-сть відліків сигналу
+    /// \param frame_size - к-сть відліків сигналу
     DataSourceFileEmulator(
         const DATA_SOURCE_TASK::SOURCE_TYPE & s_type,
         const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
-        const int & payload_size);
+        const int & frame_size);
 
     virtual ~DataSourceFileEmulator();
 

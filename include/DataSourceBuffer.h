@@ -139,6 +139,7 @@ public:
         buffer.resize(m_frame_size);
 
         m_frame   = reinterpret_cast<struct frame *>(buffer.data());
+        m_frame->payload_size = (m_frame_size - sizeof(struct frame));
         m_payload = reinterpret_cast<char *>(buffer.data() + sizeof(struct frame));
     }
 

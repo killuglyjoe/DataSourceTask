@@ -14,7 +14,7 @@ namespace DATA_SOURCE_TASK
 DataSourceFileEmulator::DataSourceFileEmulator(
     const DATA_SOURCE_TASK::SOURCE_TYPE & s_type,
     const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
-    const int & payload_size):
+    const int & frame_size):
     DataSource(s_type)
 {
     try
@@ -29,22 +29,22 @@ DataSourceFileEmulator::DataSourceFileEmulator(
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
             // Create a uniform distribution for generating float numbers in the range
             m_dist      = std::uniform_real_distribution<float>(0, 254);
-            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::uint8_t>>(payload_size/sizeof(std::uint8_t));
+            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::uint8_t>>(frame_size);
             break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
             // Create a uniform distribution for generating float numbers in the range
             m_dist      = std::uniform_real_distribution<float>(-1450.13f, 1450.13f);
-            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int16_t>>(payload_size/sizeof(std::int16_t));
+            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int16_t>>(frame_size);
             break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
             // Create a uniform distribution for generating float numbers in the range
             m_dist      = std::uniform_real_distribution<float>(-1450.13f, 1450.13f);
-            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int32_t>>(payload_size/sizeof(std::int32_t));
+            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::int32_t>>(frame_size);
             break;
         case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
             // Create a uniform distribution for generating float numbers in the range
             m_dist      = std::uniform_real_distribution<float>(-100.0f, 150.13f);
-            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<float>>(payload_size/sizeof(float));
+            m_buffer    = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<float>>(frame_size);
             break;
         default:
             break;
@@ -61,7 +61,6 @@ DataSourceFileEmulator::DataSourceFileEmulator(
         m_buffer->setFrameCounter(0);
         m_buffer->setSourceID(s_type);
         m_buffer->setPayloadType(p_type);
-        m_buffer->setPayloadSize(payload_size);
     }
     else
     {

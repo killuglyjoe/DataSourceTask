@@ -21,11 +21,10 @@ public:
     /// \param source_path - безпосередньо походження джерела (шлях до файлу, мережева адреса тощо). Може треба
     /// параметризувати цей параметр \param source_type - тип джереала \param p_type - тип корисних даних \param
     /// frame_size - к-сть елементів в payload
-    DataSourceController(
-        const std::string & source_path,
-        const SOURCE_TYPE & source_type,
-        const PAYLOAD_TYPE & p_type,
-        const std::uint32_t & frame_size);
+    DataSourceController(const std::string & source_path,
+                         const SOURCE_TYPE & source_type,
+                         const PAYLOAD_TYPE & p_type,
+                         const std::uint32_t & frame_size);
 
     virtual ~DataSourceController();
 
