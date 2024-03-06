@@ -16,7 +16,7 @@ public:
 
     /// \brief Фугкція повертає заголовок фрейму
     /// \return
-    inline std::int32_t header() const
+    inline std::uint32_t header() const
     {
         if (m_frame)
             return m_frame->magic_word;
@@ -25,14 +25,14 @@ public:
     }
     /// \brief
     /// \return
-    void setHeader(const std::int32_t & header)
+    void setHeader(const std::uint32_t & header)
     {
         if (m_frame)
             m_frame->magic_word = header;
     }
     /// \brief
     /// \return
-    inline std::int16_t frameCounter() const
+    inline std::uint16_t frameCounter() const
     {
         if (m_frame)
             return m_frame->frame_counter;
@@ -41,7 +41,7 @@ public:
     }
     /// \brief
     /// \return
-    void setFrameCounter(const std::int16_t & cntr)
+    void setFrameCounter(const std::uint16_t & cntr)
     {
         if (m_frame)
             m_frame->frame_counter = cntr;
@@ -78,7 +78,7 @@ public:
     }
     /// \brief
     /// \return
-    inline std::int32_t payloadSize() const
+    inline std::uint32_t payloadSize() const
     {
         if (m_frame)
             return m_frame->payload_size;

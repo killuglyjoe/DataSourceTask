@@ -8,7 +8,7 @@
 
 static constexpr const char * FILE_SOURCE = "dev";
 
-// 10 МБ/с = 10×1024×1024 байт/с - міеімальна пропускна здатність
+// 10 МБ/с = 10×1024×1024 байт/с - мінімальна пропускна здатність
 // 100 МБ/с = 100×1024×1024 байт/с - максимальна пропускна здатність
 // 200 Гц - частота видачі кадрів
 
@@ -35,7 +35,7 @@ int main(int argc, char ** argv)
     constexpr DATA_SOURCE_TASK::SOURCE_TYPE s_type {DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_EMULATOR};
 
     // Джерело повинно записувати числа з плаваючою крапкою
-    constexpr DATA_SOURCE_TASK::PAYLOAD_TYPE p_type {DATA_SOURCE_TASK::PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT};
+    constexpr DATA_SOURCE_TASK::PAYLOAD_TYPE p_type {DATA_SOURCE_TASK::PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT};
 
     try
     {

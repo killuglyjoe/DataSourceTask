@@ -94,7 +94,7 @@ bool DataSourceFrameProcessor::validateFrame(DataSourceBufferInterface * buffer,
     if (frm->payload_type != PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT)
     {
         // CPU
-        for (int i = 0; i < cur_buf->payloadSize(); ++i)
+        for (std::uint32_t i = 0; i < cur_buf->payloadSize(); ++i)
         {
             cur_buf->payload()[i] = static_cast<float>(payload[i]);
         }

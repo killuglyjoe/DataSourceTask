@@ -79,10 +79,10 @@ Timer overall_timer; // між оновленням даних
 
 void DataSourceFileEmulator::updateBufs()
 {
-    static int16_t frm_counter = 0;
+    static uint16_t frm_counter = 0;
 
     // Згенеруємо випадкові числа
-    for (int i = 0; i < m_buffer->payloadSize(); ++i)
+    for (uint32_t i = 0; i < m_buffer->payloadSize(); ++i)
     {
         float val = m_dist(m_mt);
         switch (m_buffer->frame()->payload_type)
@@ -121,7 +121,7 @@ void DataSourceFileEmulator::updateBufs()
     }
 
     ++frm_counter;
-    if (frm_counter >= std::numeric_limits<int16_t>::max())
+    if (frm_counter >= UINT16_MAX)
         frm_counter = 0;
 
     m_buffer->setFrameCounter(frm_counter);

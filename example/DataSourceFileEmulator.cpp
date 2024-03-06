@@ -114,7 +114,7 @@ void DataSourceFileEmulator::writeData()
             diff_timer.reset();
 
             // Згенеруємо випадкові числа
-            for (int i = 0; i < m_buffer->payloadSize(); ++i)
+            for (std::uint32_t i = 0; i < m_buffer->payloadSize(); ++i)
             {
                 float val = dist(mt);
                 switch (m_buffer->frame()->payload_type)
@@ -173,6 +173,10 @@ void DataSourceFileEmulator::writeData()
                 is_write_active = false;
                 throw std::runtime_error("DataSourceFileEmulatorFailed to open file for writing." + m_file_path);
             }
+
+            ++frm_counter;
+            if (frm_counter >= UINT16_MAX)
+                frm_counter = 0;
 
             m_buffer->setFrameCounter(++frm_counter);
         }
