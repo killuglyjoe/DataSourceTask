@@ -1,5 +1,6 @@
 #include "DataSourceFrameProcessor.h"
 #include "DataSourceController.h"
+#include <cmath>
 #include <future>
 #include <iostream>
 #include <ostream>
@@ -11,10 +12,18 @@ namespace DATA_SOURCE_TASK
 std::thread process_thread;
 static std::atomic<bool> is_process_active {true};
 
+inline float validateFloat(const float & falue)
+{
+    if (std::isfinite(falue))
+        return falue;
+    else
+        return 0.;
+}
+
 DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const PAYLOAD_TYPE & p_type):
     m_frame_size {frame_size},
     m_packets_loss {-1},
-    m_need_validate {false},
+    m_can_validate {false},
     m_src_ready_buffer {-1},
     m_flt_ready_buffer {-1}
 {
@@ -51,7 +60,7 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const
 
     // float буфери
     for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; i++)
-        m_buffer[i] = std::make_shared<DataSourceBuffer<float>>(frame_size);
+        m_buffer.push_back(std::make_shared<DataSourceBuffer<float>>(frame_size));
 
     m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", m_buffer[0]->totalElements());
 
@@ -63,27 +72,33 @@ DataSourceFrameProcessor::~DataSourceFrameProcessor() { is_process_active = fals
 std::future<void> future_result;
 void DataSourceFrameProcessor::frameProcess()
 {
-    Timer timer;
+    static Timer timer;
+    // індекс буферу обробки.
+    static std::atomic<int> idx;
+    idx = 0;
     while (is_process_active)
     {
-        if (m_need_validate)
+        if (m_can_validate)
         {
+            if (std::abs(idx - m_src_ready_buffer) < 1) // поточний індекс буфера обробки мусить відставати
+                continue;
             timer.reset();
-            if (validateFrame(m_source_buffer[m_src_ready_buffer], m_req_size))
+            if (validateFrame(m_source_buffer[idx], m_req_size))
             {
                 // реєстрація блоків даних
-                m_data_source_recorder->putNewFrame(curProcessedFrame());
+                m_data_source_recorder->putNewFrame(m_buffer.at(m_flt_ready_buffer));
             }
 
-            m_elapsed = timer.elapsed();
+            if (++idx >= static_cast<int>(MAX_PROCESSING_BUF_NUM))
+                idx = 0;
 
-            m_need_validate = false;
+            m_elapsed = timer.elapsed();
         }
     }
 }
 
-bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInterface> &buffer,
-                                             const int & updated_size)
+bool DataSourceFrameProcessor::validateFrame(
+    std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
@@ -119,7 +134,7 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
     // Готовий буфер для запису
     ++m_flt_ready_buffer;
 
-    if (m_flt_ready_buffer >= 2)
+    if (m_flt_ready_buffer >= static_cast<int>(MAX_PROCESSING_BUF_NUM))
         m_flt_ready_buffer = 0;
 
     DataSourceBuffer<float> * cur_buf = m_buffer[m_flt_ready_buffer].get();
@@ -134,7 +149,7 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
         // CPU
         for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
         {
-            cur_buf->payload()[i] = static_cast<float>(payload[i]);
+            cur_buf->payload()[i] = validateFloat(static_cast<float>(payload[i]));
         }
 
         return true;
@@ -146,19 +161,20 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
     return true;
 }
 
-void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInterface> &buffer, const int & updated_size)
+void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)
 {
+    std::lock_guard<std::mutex> lock(m_process_mutex);
     // Готовий буфер для запису
     ++m_src_ready_buffer;
 
-    if (m_src_ready_buffer >= 2)
+    if (m_src_ready_buffer >= static_cast<int>(MAX_PROCESSING_BUF_NUM))
         m_src_ready_buffer = 0;
 
     // Обміняємо буфери для обробки
     m_source_buffer[m_src_ready_buffer].swap(buffer);
 
-    m_req_size          = updated_size;
-    m_need_validate     = true;
+    m_req_size = updated_size;
+    m_can_validate = true;
 }
 
 } // namespace DATA_SOURCE_TASK

@@ -8,8 +8,6 @@
 
 static std::atomic<bool> is_write_active {true};
 
-static constexpr int FRAME_RATE {1000 / 200}; // 200 Hz
-
 using namespace DATA_SOURCE_TASK;
 
 DataSourceFileEmulator::DataSourceFileEmulator(
@@ -189,7 +187,7 @@ void DataSourceFileEmulator::writeData()
             m_buffer->setFrameCounter(++frm_counter);
         }
 
-        while (diff_timer.elapsed() < FRAME_RATE)
+        while (diff_timer.elapsed() < DATA_SOURCE_TASK::FRAME_RATE)
         { // 200 Hz
         }
     }

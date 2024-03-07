@@ -21,13 +21,13 @@ size_t nearestPowerOfTwo(const size_t & n)
 // Активатор потоку запису
 static std::atomic<bool> is_can_record_active;
 
-DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name,
-                                                 const int & num_elements):
+DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name, const int & num_elements):
     m_record_name {record_name},
     m_need_record {false}
 {
     m_buffer_size = nearestPowerOfTwo(num_elements);
 
+    // Буфери для запису розміром кратним степеня 2
     for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)
     {
         struct record_buffer * buf = &m_frame_record[i];
@@ -36,6 +36,12 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
         buf->id             = i + 1;
     }
 
+    const std::uint32_t frame_size {static_cast<uint32_t>(sizeof(struct frame) + num_elements * sizeof(float))};
+
+    // Дані оброблених відліків
+    m_source_buffer = std::make_shared<DataSourceBuffer<float>>(frame_size);
+
+    // Хвіст для подальшого формування буферів запису
     m_tail_record.record_buffer.resize(m_buffer_size);
     m_tail_record.available_size = m_buffer_size;
     m_tail_record.id             = 2;
@@ -141,9 +147,12 @@ void DataSourceFrameRecorder::updateBufs(const std::shared_ptr<DataSourceBuffer<
     }
 }
 
-void DataSourceFrameRecorder::putNewFrame(const std::shared_ptr<DataSourceBuffer<float>> & frame)
+void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float>> & frame)
 {
     std::lock_guard<std::mutex> lock(m_buf_lock);
+
+    // Обміняємо буфери для обробки
+    m_source_buffer.swap(frame);
 
     Timer timer;
     timer.reset();
@@ -156,10 +165,10 @@ void DataSourceFrameRecorder::putNewFrame(const std::shared_ptr<DataSourceBuffer
         buf->is_full = false;
     }
 
-    std::size_t availabale_in_data = frame->payloadSize();
+    std::size_t availabale_in_data = m_source_buffer->payloadSize();
     int av_data_in_pos             = 0;
 
-    updateBufs(frame, availabale_in_data, av_data_in_pos);
+    updateBufs(m_source_buffer, availabale_in_data, av_data_in_pos);
 
     if (m_frame_record[0].is_full && m_frame_record[1].is_full && m_frame_record[2].is_full)
     {
@@ -175,8 +184,8 @@ void DataSourceFrameRecorder::putNewFrame(const std::shared_ptr<DataSourceBuffer
         }
         buf->is_full = true;
 
-        std::copy(frame->payload() + av_data_in_pos,
-                  frame->payload() + av_data_in_pos + num_data_store,
+        std::copy(m_source_buffer->payload() + av_data_in_pos,
+                  m_source_buffer->payload() + av_data_in_pos + num_data_store,
                   buf->record_buffer.data() + buf->pos);
     }
 

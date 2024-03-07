@@ -49,11 +49,17 @@ int main(int argc, char ** argv)
         std::unique_ptr<DATA_SOURCE_TASK::DataSourceController> data_source_processor
             = std::make_unique<DATA_SOURCE_TASK::DataSourceController>(FILE_SOURCE, s_type, p_type, MAX_FRAME_SIZE);
 
+        DATA_SOURCE_TASK::Timer display_update_timer;
         // Вивід результатів в консоль
         for (;;)
         {
+            display_update_timer.reset();
             // Читимо консоль перед нови виводом даних
             system(CLEAR_CONSOLE);
+
+            static int prev_counter = -1;
+
+            int diff_frames = data_source_processor->framesTotal() - (prev_counter == -1 ? 0 : prev_counter);
 
             std::cout << "Frame size: " << MAX_FRAME_SIZE << std::endl;
             std::cout << "Elapsed time for frame write: " << data_source_processor->dataSource().elapsed() << std::endl;
@@ -61,14 +67,20 @@ int main(int argc, char ** argv)
 
             // Заголовок, к-сть обробленних кадрів, к-сть втрачених
             std::cout << "Frames recieved: " << data_source_processor->framesTotal() << std::endl;
+            std::cout << "Processed frames: " << diff_frames<< std::endl;
             std::cout << "Frame head: " << std::hex << data_source_processor->header() << std::dec << std::endl;
             std::cout << "Frames loss: " << data_source_processor->getPacketsLoss() << std::endl;
+            std::cout << "Frames loss %: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() <<"%"<< std::endl;
 
             std::cout << "Elapsed time for frame process: " << data_source_processor->frameProcessor().elapsed()
                       << std::endl;
 
             // пауза перед оновленням виводу
-            std::this_thread::sleep_for(std::chrono::seconds(1));
+            prev_counter = data_source_processor->framesTotal();
+
+            while (display_update_timer.elapsed() < 1000) {
+
+            }
         }
     }
     catch (const std::exception & ex)

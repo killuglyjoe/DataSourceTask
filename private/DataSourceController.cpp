@@ -24,8 +24,6 @@ DataSourceController::DataSourceController(
     const uint32_t & frame_size):
     m_active_buffer {0}
 {
-    m_payload_byte_size        = frame_size - sizeof(struct frame);
-
     try
     {
         // виділимо данні
@@ -103,7 +101,7 @@ void DataSourceController::readData()
         timer.reset();
 
         // - браковані кадри заповнювати нулями
-        memset(m_buffer[m_active_buffer]->payload(), 0, m_payload_byte_size);
+        memset(m_buffer[m_active_buffer]->payload(), 0, m_buffer[m_active_buffer]->payloadSize());
 
         // читаємо з джерела
         ret_size = m_data_source->read(m_buffer[m_active_buffer]->data(), m_buffer[m_active_buffer]->size());
@@ -119,6 +117,11 @@ void DataSourceController::readData()
         ++m_active_buffer;
         if (m_active_buffer == MAX_PROCESSING_BUF_NUM)
             m_active_buffer = 0;
+
+        while (m_elapsed < FRAME_RATE)
+        {
+            m_elapsed = timer.elapsed();
+        }
     }
 }
 

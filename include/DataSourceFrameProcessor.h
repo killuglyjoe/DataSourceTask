@@ -58,14 +58,14 @@ private:
 
     std::mutex m_process_mutex;
 
-    std::atomic<bool> m_need_validate;
+    std::atomic<bool> m_can_validate;
     std::atomic<int> m_req_size;
 
     std::atomic<int> m_src_ready_buffer;
     std::shared_ptr<DataSourceBufferInterface> m_source_buffer[MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
 
     std::atomic<int> m_flt_ready_buffer;
-    std::shared_ptr<DataSourceBuffer<float>> m_buffer[MAX_PROCESSING_BUF_NUM]; // дані будуть перетворені в float
+    std::vector<std::shared_ptr<DataSourceBuffer<float>>> m_buffer; // дані будуть перетворені в float
 
     std::unique_ptr<DataSourceFrameRecorder> m_data_source_recorder;
 };

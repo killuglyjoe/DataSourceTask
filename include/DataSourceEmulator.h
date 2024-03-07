@@ -4,6 +4,7 @@
 #include "DataSource.h"
 #include "DataSourceBuffer.h"
 
+#include <mutex>
 #include <random>
 #include <memory>
 
@@ -38,6 +39,7 @@ protected:
 private:
     int m_byte_size = 0;
 
+    std::mutex m_read_lock;
     std::mt19937 m_mt;
     std::uniform_real_distribution<float> m_dist;
 

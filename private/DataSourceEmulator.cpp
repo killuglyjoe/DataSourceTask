@@ -1,12 +1,8 @@
 #include "DataSourceEmulator.h"
 
-#include <atomic>
 #include <iostream>
 #include <mutex>
 #include <random>
-#include <thread>
-
-static constexpr int FRAME_RATE {1000 / 200}; // 200 Hz = 5ms
 
 namespace DATA_SOURCE_TASK
 {
@@ -70,16 +66,16 @@ DataSourceFileEmulator::DataSourceFileEmulator(
     generateRandom();
 }
 
-DataSourceFileEmulator::~DataSourceFileEmulator() { std::cout << "~DataSourceFileEmulator()" << std::endl; }
+DataSourceFileEmulator::~DataSourceFileEmulator() {}
 
 void DataSourceFileEmulator::generateRandom()
 {
-    static float val = 1.2;
+    static float val = 1.0;
     // ++val;
     // Згенеруємо випадкові числа
     for (uint32_t i = 0; i < m_buffer->totalElements(); ++i)
     {
-        // float val = m_dist(m_mt);
+        val = m_dist(m_mt);
         switch (m_buffer->frame()->payload_type)
         {
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
@@ -116,8 +112,6 @@ void DataSourceFileEmulator::generateRandom()
     }
 }
 
-Timer overall_timer; // між оновленням даних
-
 void DataSourceFileEmulator::updateBufs()
 {
     static uint16_t frm_counter = 0;
@@ -131,16 +125,18 @@ void DataSourceFileEmulator::updateBufs()
     m_buffer->setFrameCounter(frm_counter);
 }
 
-std::mutex read_lock;
-Timer diff_timer; // для вирівнювання sleep До 200 Гц
 int DataSourceFileEmulator::read(char * data, int size)
 {
-    std::lock_guard<std::mutex> lock(read_lock);
+    static Timer overall_timer; // між оновленням даних
+    static Timer diff_timer; // для вирівнювання sleep До 200 Гц
+
+    std::lock_guard<std::mutex> lock(m_read_lock);
 
     overall_timer.reset();
     diff_timer.reset();
 
     m_elapsed = 0;
+
     updateBufs();
 
     // - результат DataSource::read() непередбачуваний, близький до реальної ситуації, може варіюватись у межах 0..size;
@@ -148,10 +144,10 @@ int DataSourceFileEmulator::read(char * data, int size)
 
     std::copy(m_buffer->data(), m_buffer->data() + size, data);
 
-    while (m_elapsed < FRAME_RATE)
-    {
-        m_elapsed = overall_timer.elapsed();
-    }
+    // while (m_elapsed < FRAME_RATE)
+    // {
+    //     m_elapsed = overall_timer.elapsed();
+    // }
 
     return size;
 }

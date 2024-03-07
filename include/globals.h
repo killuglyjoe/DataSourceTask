@@ -67,8 +67,10 @@ private:
     std::chrono::time_point<std::chrono::system_clock> m_start;
 };
 
+static constexpr int FRAME_RATE {1000 / 200}; // 200 Hz = 5ms
+
 // К-сть буферів під читання/обробку
-static constexpr std::size_t MAX_PROCESSING_BUF_NUM {2};
+static constexpr std::size_t MAX_PROCESSING_BUF_NUM {3};
 
 // максимальний розмір запитуваних даних size обмежується ресурсами обчислювальної системи
 static constexpr std::uint32_t MAX_DATA_SIZE {20 * 1024};

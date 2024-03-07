@@ -36,7 +36,7 @@ public:
 
     /// \brief Заповнюємо буфери розміром до к-сті відліків степеня 2
     /// \param buffer - дані джерела
-    void putNewFrame(const std::shared_ptr<DataSourceBuffer<float>> & buffer);
+    void putNewFrame(std::shared_ptr<DataSourceBuffer<float>> & buffer);
 
     /// \brief Замір часу на запис в буфери
     /// \return
@@ -66,6 +66,8 @@ private:
 
     struct record_buffer m_frame_record[3]; // буфери даних для запису в файл
     struct record_buffer m_tail_record;     // буфер для залишку
+
+    std::shared_ptr<DataSourceBuffer<float>> m_source_buffer; // дані для swap з джерела
 };
 
 } // namespace DATA_SOURCE_TASK
