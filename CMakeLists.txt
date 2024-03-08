@@ -73,6 +73,6 @@ endif()
 # Приклад роботи з бібліотекою
 add_executable(DataSouceExample
     example/main.cpp
-    example/DataSourceFileEmulator.cpp)
+)
 
 target_link_libraries(DataSouceExample DataSouce)

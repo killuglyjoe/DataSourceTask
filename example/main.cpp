@@ -1,10 +1,7 @@
 #include "DataSourceController.h"
-#include "DataSourceFileEmulator.h"
 
-#include <chrono>
 #include <iostream>
 #include <ostream>
-#include <thread>
 
 static constexpr const char * FILE_SOURCE = "dev";
 
@@ -13,7 +10,7 @@ static constexpr const char * FILE_SOURCE = "dev";
 // 200 Гц - частота видачі кадрів
 
 // Максимальний розмір кадру = (100×1024×1024) / 200 = 512 * 1024 Байт
-static constexpr int MAX_FRAME_SIZE {512 * 1024};
+static constexpr int MAX_FRAME_SIZE {51 * 1024};
 
 // Мінімальний розмір кадру = (10×1024×1024) / 200 = 51 * 1024 Байт
 static constexpr int MIN_FRAME_SIZE {51 * 1024};
@@ -31,9 +28,6 @@ int main(int argc, char ** argv)
     static_cast<void>(argc);
     static_cast<void>(argv);
 
-    // Обмін через файл FILE_SOURCE
-    // constexpr DATA_SOURCE_TASK::SOURCE_TYPE s_type {DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_FILE};
-
     // SOURCE_TYPE_EMULATOR
     constexpr DATA_SOURCE_TASK::SOURCE_TYPE s_type {DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_EMULATOR};
 
@@ -42,12 +36,6 @@ int main(int argc, char ** argv)
 
     try
     {
-#if 0
-        // Емулятор джерела даних
-        std::unique_ptr<DataSourceFileEmulator> file_data_source_emulator
-            = std::make_unique<DataSourceFileEmulator>(FILE_SOURCE, s_type, p_type, MAX_FRAME_SIZE);
-#endif
-
         // Обробка фреймів з джерела
         std::unique_ptr<DATA_SOURCE_TASK::DataSourceController> data_source_processor
             = std::make_unique<DATA_SOURCE_TASK::DataSourceController>(FILE_SOURCE, s_type, p_type, MAX_FRAME_SIZE);
