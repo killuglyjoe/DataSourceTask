@@ -7,8 +7,7 @@ namespace DATA_SOURCE_TASK
 {
 
 DataSourceFile::DataSourceFile(const std::string & file_path):
-    DataSource(SOURCE_TYPE::SOURCE_TYPE_FILE),
-    m_file_path {file_path}
+    DataSource(SOURCE_TYPE::SOURCE_TYPE_FILE), m_file_path {file_path}
 {
 }
 
@@ -26,8 +25,9 @@ int DataSourceFile::read(char * data, int size)
     if (!source_file.seekg(0, std::ios::beg))
         return static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
 
-    int index = 0;
-    char character;
+    static int index;
+    index = 0;
+    static char character;
 
     while (index < size && (source_file.get(character)))
     {

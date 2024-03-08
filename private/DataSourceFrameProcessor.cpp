@@ -1,9 +1,7 @@
 #include "DataSourceFrameProcessor.h"
-#include "DataSourceController.h"
+
 #include <cmath>
 #include <future>
-#include <iostream>
-#include <ostream>
 #include <thread>
 
 namespace DATA_SOURCE_TASK
@@ -77,8 +75,6 @@ void DataSourceFrameProcessor::frameProcess()
     // індекс буферу обробки.
     static std::atomic<int> idx;
     idx = 0;
-
-    static double elapsed = 0.;
 
     while (is_process_active)
     {

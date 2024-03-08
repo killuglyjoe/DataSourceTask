@@ -71,9 +71,10 @@ void DataSourceFileEmulator::generateRandom()
     static float val = 1.0;
     ++val;
     // Згенеруємо випадкові числа
+    // Міняти байти місцями не будемо в цьому випадку.
     for (uint32_t i = 0; i < m_buffer->totalElements(); ++i)
     {
-        // val = m_dist(m_mt);
+        // val = m_dist(m_mt); // сповільнює читання
         switch (m_buffer->frame()->payload_type)
         {
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
