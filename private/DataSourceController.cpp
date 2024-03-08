@@ -4,9 +4,6 @@
 #include "DataSourceFile.h"
 
 #include <cstring>
-#include <future>
-#include <iostream>
-#include <ostream>
 #include <thread>
 #include <atomic>
 
@@ -94,11 +91,13 @@ void DataSourceController::readData()
 
     while (is_read_active)
     {
-        static int ret_size = 0;
+        static int ret_size   = 0;
+        static double elapsed = 0.;
 
         std::lock_guard<std::mutex> lock(read_lock);
 
         timer.reset();
+        elapsed = 0;
 
         // - браковані кадри заповнювати нулями
         memset(m_buffer[m_active_buffer]->payload(), 0, m_buffer[m_active_buffer]->payloadSize());
@@ -112,16 +111,17 @@ void DataSourceController::readData()
             m_data_source_frm_processor->putNewFrame(m_buffer[m_active_buffer], ret_size);
         }
 
-        m_elapsed = timer.elapsed();
-
         ++m_active_buffer;
         if (m_active_buffer == MAX_PROCESSING_BUF_NUM)
             m_active_buffer = 0;
 
-        while (m_elapsed < FRAME_RATE)
+        elapsed = timer.elapsed();
+
+        while (elapsed < FRAME_RATE)
         {
-            m_elapsed = timer.elapsed();
+            elapsed = timer.elapsed();
         }
+        m_elapsed = elapsed;
     }
 }
 

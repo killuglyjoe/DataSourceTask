@@ -140,7 +140,7 @@ void DataSourceFileEmulator::writeData()
 
             diff_timer.reset();
 
-            generateRandom();
+            // generateRandom();
 
             // Будемо перезаписувати файл блоком даних.
             // Імітується файловий пристрій.

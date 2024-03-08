@@ -9,21 +9,20 @@
 namespace DATA_SOURCE_TASK
 {
 
-// Функція вертає найближчезначення числа степеня 2
+// Функція вертає найближче значення числа степеня 2 ( наприклад: для 10 -> 16)
 size_t nearestPowerOfTwo(const size_t & n)
 {
     if (n <= 1)
         return 1;
 
-    return static_cast<size_t>(std::pow(2, std::ceil(std::log2(n))) / 2.);
+    return static_cast<size_t>(std::pow(2, std::ceil(std::log2(n))));
 }
 
 // Активатор потоку запису
 static std::atomic<bool> is_can_record_active;
 
 DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name, const int & num_elements):
-    m_record_name {record_name},
-    m_need_record {false}
+    m_record_name {record_name}, m_need_record {false}
 {
     m_buffer_size = nearestPowerOfTwo(num_elements);
 
@@ -36,15 +35,8 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
         buf->id             = i + 1;
     }
 
-    const std::uint32_t frame_size {static_cast<uint32_t>(sizeof(struct frame) + num_elements * sizeof(float))};
-
-    // Дані оброблених відліків
-    m_source_buffer = std::make_shared<DataSourceBuffer<float>>(frame_size);
-
-    // Хвіст для подальшого формування буферів запису
-    m_tail_record.record_buffer.resize(m_buffer_size);
-    m_tail_record.available_size = m_buffer_size;
-    m_tail_record.id             = 2;
+    // Дані для запису в файл
+    m_record_buffer.resize(m_buffer_size);
 
     // асинхронний потік запису в файл
     record_to_file = std::thread(&DataSourceFrameRecorder::recordBlock, this);
@@ -62,87 +54,31 @@ void DataSourceFrameRecorder::recordBlock()
         std::ofstream source_file(m_record_name, std::ios::out | std::ios::binary);
 
         if (!source_file)
-        {
-            for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)
-            {
-                struct record_buffer * buf = &m_frame_record[i];
-                if (!buf->is_full)
-                    continue;
-
-                buf->is_full        = false;
-                buf->pos            = 0;
-                buf->available_size = m_buffer_size;
-            }
-
             continue;
-        }
 
-        for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)
+        char * wbuf  = reinterpret_cast<char *>(m_record_buffer.data());
+        int buz_size = m_record_buffer.size() * sizeof(float);
+
+        source_file.write(wbuf, buz_size);
+
+        m_need_record = false;
+
+        if (source_file.fail())
         {
-            struct record_buffer * buf = &m_frame_record[i];
-            if (!buf->is_full)
-                continue;
+            std::ios_base::iostate state = source_file.rdstate();
 
-            char * wbuf  = reinterpret_cast<char *>(buf->record_buffer.data());
-            int buz_size = buf->record_buffer.size() * sizeof(float);
-
-            source_file.write(wbuf, buz_size);
-
-            m_need_record = false;
-
-            if (source_file.fail())
+            if (state & std::ios_base::eofbit)
             {
-                std::ios_base::iostate state = source_file.rdstate();
-
-                if (state & std::ios_base::eofbit)
-                {
-                    std::cout << "DataSourceFrameRecorder: End of file reached." << std::endl;
-                }
-                if (state & std::ios_base::failbit)
-                {
-                    std::cout << "DataSourceFrameRecorder: Non-fatal I/O error occurred." << std::endl;
-                }
-                if (state & std::ios_base::badbit)
-                {
-                    std::cout << "DataSourceFrameRecorder: Fatal I/O error occurred." << std::endl;
-                }
+                std::cout << "DataSourceFrameRecorder: End of file reached." << std::endl;
             }
-
-            buf->is_full        = false;
-            buf->pos            = 0;
-            buf->available_size = m_buffer_size;
-        }
-    }
-}
-
-void DataSourceFrameRecorder::updateBufs(const std::shared_ptr<DataSourceBuffer<float>> & frame,
-                                         std::size_t availabale_in_data,
-                                         int av_data_in_pos)
-{
-    for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)
-    {
-        struct record_buffer * buf = &m_frame_record[i];
-
-        if (!buf->is_full)
-        {
-            std::size_t num_data_store = buf->available_size;
-
-            if (availabale_in_data < num_data_store)
+            if (state & std::ios_base::failbit)
             {
-                num_data_store = availabale_in_data;
+                std::cout << "DataSourceFrameRecorder: Non-fatal I/O error occurred." << std::endl;
             }
-
-            std::copy(frame->payload() + av_data_in_pos,
-                      frame->payload() + av_data_in_pos + num_data_store,
-                      buf->record_buffer.data() + buf->pos);
-
-            buf->pos += num_data_store;
-            buf->available_size -= num_data_store;
-            buf->is_full = (buf->pos >= m_buffer_size);
-
-            availabale_in_data -= num_data_store;
-
-            av_data_in_pos += availabale_in_data;
+            if (state & std::ios_base::badbit)
+            {
+                std::cout << "DataSourceFrameRecorder: Fatal I/O error occurred." << std::endl;
+            }
         }
     }
 }
@@ -151,42 +87,50 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
 {
     std::lock_guard<std::mutex> lock(m_buf_lock);
 
-    // Обміняємо буфери для обробки
-    m_source_buffer.swap(frame);
-
     Timer timer;
     timer.reset();
 
-    if (m_tail_record.is_full)
+    std::size_t av_in_data = frame->payloadSize();
+
+    for (std::uint8_t i = 0; i < MAX_REC_BUF_NUM; ++i)
     {
-        struct record_buffer * buf = &m_frame_record[0];
-        buf->record_buffer.swap(m_tail_record.record_buffer);
-        buf          = &m_tail_record;
-        buf->is_full = false;
-    }
+        struct record_buffer * buf = &m_frame_record[i];
 
-    std::size_t availabale_in_data = m_source_buffer->payloadSize();
-    int av_data_in_pos             = 0;
-
-    updateBufs(m_source_buffer, availabale_in_data, av_data_in_pos);
-
-    if (m_frame_record[0].is_full && m_frame_record[1].is_full && m_frame_record[2].is_full)
-    {
-        m_need_record = true;
-
-        // Запишем залишок
-        struct record_buffer * buf = &m_tail_record;
-        std::size_t num_data_store = buf->available_size;
-
-        if (availabale_in_data < num_data_store)
+        if (!buf->is_full && av_in_data > 0)
         {
-            num_data_store = availabale_in_data;
-        }
-        buf->is_full = true;
+            std::size_t num_data_store = buf->available_size;
 
-        std::copy(m_source_buffer->payload() + av_data_in_pos,
-                  m_source_buffer->payload() + av_data_in_pos + num_data_store,
-                  buf->record_buffer.data() + buf->pos);
+            if (av_in_data < num_data_store)
+            {
+                num_data_store = av_in_data;
+            }
+            else
+            {
+                num_data_store = buf->available_size;
+            }
+
+            std::copy(frame->payload(), frame->payload() + num_data_store, buf->record_buffer.data() + buf->pos);
+
+            buf->pos += num_data_store;
+            buf->available_size -= num_data_store;
+            buf->is_full = (buf->pos >= m_buffer_size);
+
+            if (buf->is_full)
+            {
+                // Обміняємо буфери для запису
+                m_record_buffer.swap(buf->record_buffer);
+
+                m_need_record = true;
+            }
+
+            av_in_data -= num_data_store;
+        }
+        else
+        {
+            buf->is_full        = false;
+            buf->available_size = buf->record_buffer.size();
+            buf->pos            = 0;
+        }
     }
 
     m_elapsed = timer.elapsed();

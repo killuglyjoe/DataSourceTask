@@ -73,20 +73,26 @@ std::future<void> future_result;
 void DataSourceFrameProcessor::frameProcess()
 {
     static Timer timer;
+
     // індекс буферу обробки.
     static std::atomic<int> idx;
     idx = 0;
+
+    static double elapsed = 0.;
+
     while (is_process_active)
     {
         if (m_can_validate)
         {
             if (std::abs(idx - m_src_ready_buffer) < 1) // поточний індекс буфера обробки мусить відставати
                 continue;
+
             timer.reset();
+
             if (validateFrame(m_source_buffer[idx], m_req_size))
             {
                 // реєстрація блоків даних
-                m_data_source_recorder->putNewFrame(m_buffer.at(m_flt_ready_buffer));
+                m_data_source_recorder->putNewFrame(m_buffer[m_flt_ready_buffer]);
             }
 
             if (++idx >= static_cast<int>(MAX_PROCESSING_BUF_NUM))
@@ -140,7 +146,7 @@ bool DataSourceFrameProcessor::validateFrame(
     DataSourceBuffer<float> * cur_buf = m_buffer[m_flt_ready_buffer].get();
 
     // оновимо заголовок
-    std::copy(frm, frm + sizeof(struct frame), cur_buf->frame());
+    std::copy(frm, frm + FRAME_HEADER_SIZE, cur_buf->frame());
 
     // - реалізувати максимально обчислювально ефективне перетворення усіх даних
     // до єдиного типу 32 bit IEEE 754 float та приведення до діапазону +/-1.0;
@@ -164,6 +170,7 @@ bool DataSourceFrameProcessor::validateFrame(
 void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
+
     // Готовий буфер для запису
     ++m_src_ready_buffer;
 

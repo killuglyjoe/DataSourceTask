@@ -11,7 +11,7 @@
 namespace DATA_SOURCE_TASK
 {
 
-static constexpr std::size_t MAX_REC_BUF_NUM {3};
+static constexpr std::size_t MAX_REC_BUF_NUM {2};
 
 struct record_buffer
 {
@@ -46,13 +46,6 @@ protected:
     /// \brief Асинхронний запис в файл
     void recordBlock();
 
-    /// \brief перепаковування блоків даних блоки розміром степеня числа 2
-    /// \param frame - вхідний кадр
-    /// \param availabale_in_data - дані для запису вхідного кадру
-    /// \param av_data_in_pos - зсув в данх
-    void updateBufs(
-        const std::shared_ptr<DataSourceBuffer<float>> & frame, std::size_t availabale_in_data, int av_data_in_pos);
-
 private:
     std::uint8_t m_active_buffer_index = 0;
     int m_buffer_size                  = 0; // к-сть відліків степепня числа 2
@@ -64,10 +57,9 @@ private:
     std::mutex m_buf_lock;
     std::atomic<bool> m_need_record;
 
-    struct record_buffer m_frame_record[3]; // буфери даних для запису в файл
-    struct record_buffer m_tail_record;     // буфер для залишку
+    struct record_buffer m_frame_record[MAX_REC_BUF_NUM]; // буфери даних для запису в файл
 
-    std::shared_ptr<DataSourceBuffer<float>> m_source_buffer; // дані для swap з джерела
+    std::vector<float> m_record_buffer; // дані для запису в файл
 };
 
 } // namespace DATA_SOURCE_TASK

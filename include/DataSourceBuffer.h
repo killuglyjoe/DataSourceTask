@@ -135,12 +135,12 @@ public:
     {
         m_frame_size   = frame_size;
         m_type_size    = sizeof(T);
-        m_elements_num = (m_frame_size - sizeof(struct frame)) / m_type_size;
+        m_elements_num = (m_frame_size - FRAME_HEADER_SIZE) / m_type_size;
         buffer.resize(m_frame_size);
 
         m_frame   = reinterpret_cast<struct frame *>(buffer.data());
-        m_frame->payload_size = (m_frame_size - sizeof(struct frame));
-        m_payload = reinterpret_cast<char *>(buffer.data() + sizeof(struct frame));
+        m_frame->payload_size = (m_frame_size - FRAME_HEADER_SIZE);
+        m_payload = reinterpret_cast<char *>(buffer.data() + FRAME_HEADER_SIZE);
     }
 
     virtual ~DataSourceBuffer() {}

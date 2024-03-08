@@ -70,10 +70,7 @@ private:
 static constexpr int FRAME_RATE {1000 / 200}; // 200 Hz = 5ms
 
 // К-сть буферів під читання/обробку
-static constexpr std::size_t MAX_PROCESSING_BUF_NUM {3};
-
-// максимальний розмір запитуваних даних size обмежується ресурсами обчислювальної системи
-static constexpr std::uint32_t MAX_DATA_SIZE {20 * 1024};
+static constexpr std::size_t MAX_PROCESSING_BUF_NUM {4};
 
 // тип даних payload_type може бути:
 enum class PAYLOAD_TYPE : char
@@ -106,11 +103,13 @@ struct frame
     std::uint16_t frame_counter; // циклічний лічильник кадрів (frame_counter) 2 байти;
     SOURCE_TYPE source_id;       // ідентифікатор походження (source_id) 1 байт;
     PAYLOAD_TYPE payload_type;   // тип даних (payload_type) 1 байт;
-    std::uint32_t payload_size; // розмір блоку даних корисного навантаження (payload_size) 4 байти;
-    void * payload; // дані payload являють собою оцифовані відліки сигналу.
-                    // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
+    std::uint32_t payload_size;  // розмір блоку даних корисного навантаження (payload_size) 4 байти;
+    void * payload;              // дані payload являють собою оцифовані відліки сигналу.
+                                 // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
 };
 #pragma pack()
+
+static constexpr std::uint32_t FRAME_HEADER_SIZE {sizeof(struct frame) - sizeof(void*)};
 
 } // namespace DATA_SOURCE_TASK
 

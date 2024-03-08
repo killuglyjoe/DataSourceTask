@@ -13,10 +13,10 @@ static constexpr const char * FILE_SOURCE = "dev";
 // 200 Гц - частота видачі кадрів
 
 // Максимальний розмір кадру = (100×1024×1024) / 200 = 512 * 1024 Байт
-static constexpr int MAX_FRAME_SIZE {((512 * 1024))};
+static constexpr int MAX_FRAME_SIZE {512 * 1024};
 
 // Мінімальний розмір кадру = (10×1024×1024) / 200 = 51 * 1024 Байт
-static constexpr int MIN_FRAME_SIZE {((51 * 1024))};
+static constexpr int MIN_FRAME_SIZE {51 * 1024};
 
 #ifdef _WIN32
 // For Windows
@@ -32,6 +32,9 @@ int main(int argc, char ** argv)
     static_cast<void>(argv);
 
     // Обмін через файл FILE_SOURCE
+    // constexpr DATA_SOURCE_TASK::SOURCE_TYPE s_type {DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_FILE};
+
+    // SOURCE_TYPE_EMULATOR
     constexpr DATA_SOURCE_TASK::SOURCE_TYPE s_type {DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_EMULATOR};
 
     // Джерело повинно записувати числа з плаваючою крапкою
@@ -79,7 +82,6 @@ int main(int argc, char ** argv)
             prev_counter = data_source_processor->framesTotal();
 
             while (display_update_timer.elapsed() < 1000) {
-
             }
         }
     }
