@@ -10,7 +10,7 @@ static constexpr const char * FILE_SOURCE = "dev";
 // 200 Гц - частота видачі кадрів
 
 // Максимальний розмір кадру = (100×1024×1024) / 200 = 512 * 1024 Байт
-static constexpr int MAX_FRAME_SIZE {51 * 1024};
+static constexpr int MAX_FRAME_SIZE {512 * 1024};
 
 // Мінімальний розмір кадру = (10×1024×1024) / 200 = 51 * 1024 Байт
 static constexpr int MIN_FRAME_SIZE {51 * 1024};
