@@ -20,7 +20,7 @@ inline float validateFloat(const float & falue)
 DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const PAYLOAD_TYPE & p_type):
     m_frame_size {frame_size},
     m_packets_loss {0},
-    m_bad_frames{0},
+    m_bad_frames {0},
     m_can_validate {false},
     m_src_ready_buffer {-1},
     m_active_buffer {0},
@@ -33,17 +33,16 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const
     {
         for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
         {
-            m_source_buffer[i] = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
+            m_source_buffer[i]  = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
             m_source_buffer2[i] = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
         }
-
     }
     break;
     case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
     {
         for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
         {
-            m_source_buffer[i] = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
+            m_source_buffer[i]  = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
             m_source_buffer2[i] = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
         }
     }
@@ -52,7 +51,7 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const
     {
         for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
         {
-            m_source_buffer[i] = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
+            m_source_buffer[i]  = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
             m_source_buffer2[i] = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
         }
     }
@@ -61,7 +60,7 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const
     {
         for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
         {
-            m_source_buffer[i] = std::make_shared<DataSourceBuffer<float>>(frame_size);
+            m_source_buffer[i]  = std::make_shared<DataSourceBuffer<float>>(frame_size);
             m_source_buffer2[i] = std::make_shared<DataSourceBuffer<float>>(frame_size);
         }
         break;
@@ -93,7 +92,6 @@ void DataSourceFrameProcessor::frameProcess()
 
             for (std::size_t idx = 0; idx < MAX_PROCESSING_BUF_NUM; ++idx)
             {
-                // std::cout << "idx: " << idx << std::endl;
                 bool is_validated = false;
 
                 if (m_active_buffer == 1)
@@ -113,7 +111,7 @@ void DataSourceFrameProcessor::frameProcess()
             }
 
             m_can_validate = false;
-            m_elapsed = timer.elapsed();
+            m_elapsed      = timer.elapsed();
         }
     }
 }
