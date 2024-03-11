@@ -1,13 +1,44 @@
 #ifndef GLOBALS_H
 #define GLOBALS_H
 
-#include <atomic>
-#include <chrono>
 #include <cstdint>
+#ifdef WIN32
+#include <profileapi.h>
+#include <winnt.h>
+#else
+#include <chrono>
+#endif
 
 namespace DATA_SOURCE_TASK
 {
+#ifdef WIN32
+class Timer
+{
+public:
+    Timer() { reset(); }
 
+    void reset()
+    {
+        // Get the frequency of the performance counter
+        QueryPerformanceFrequency(&frequency);
+
+        // Record the start time
+        QueryPerformanceCounter(&start);
+    }
+    double elapsed()
+    {
+        LARGE_INTEGER end;
+        QueryPerformanceCounter(&end);
+
+        // Calculate the elapsed time in milliseconds
+        return static_cast<double>(end.QuadPart - start.QuadPart) * 1000.0 / frequency.QuadPart;
+    }
+
+private:
+    LARGE_INTEGER start;
+    LARGE_INTEGER frequency;
+};
+#else
 class Timer
 {
 public:
@@ -26,51 +57,26 @@ public:
     {
         if (isValid())
         {
-            std::chrono::time_point<std::chrono::system_clock> end;
+            static std::chrono::time_point<std::chrono::system_clock> end;
             end = std::chrono::system_clock::now();
 
-            return std::chrono::duration_cast<std::chrono::milliseconds>(end - m_start).count();
-        }
-        return std::numeric_limits<int64_t>::max();
-    }
-
-    /// \brief Пройдений час в мікросекундах
-    /// \return
-    std::int64_t elapsed_us() const
-    {
-        if (isValid())
-        {
-            std::chrono::time_point<std::chrono::system_clock> end;
-            end = std::chrono::system_clock::now();
-
-            return std::chrono::duration_cast<std::chrono::microseconds>(end - m_start).count();
-        }
-        return std::numeric_limits<int64_t>::max();
-    }
-
-    /// \brief Пройдений час в секундах
-    /// \return
-    std::int64_t elapsed_s() const
-    {
-        if (isValid())
-        {
-            std::chrono::time_point<std::chrono::system_clock> end;
-            end = std::chrono::system_clock::now();
-
-            return std::chrono::duration_cast<std::chrono::seconds>(end - m_start).count();
+            return std::chrono::duration_cast<std::chrono::milliseconds>(
+                       std::chrono::high_resolution_clock::now() - m_start)
+                .count();
         }
         return std::numeric_limits<int64_t>::max();
     }
 
 private:
     std::atomic<bool> m_is_valid;
-    std::chrono::time_point<std::chrono::system_clock> m_start;
+    std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
 };
+#endif
 
-static constexpr int FRAME_RATE {1000 / 200}; // 200 Hz = 5ms
+static constexpr double FRAME_RATE {1000. / 200.}; // 200 Hz = 5ms
 
 // К-сть буферів під читання/обробку
-static constexpr std::size_t MAX_PROCESSING_BUF_NUM {4};
+static constexpr std::size_t MAX_PROCESSING_BUF_NUM {8};
 
 // тип даних payload_type може бути:
 enum class PAYLOAD_TYPE : char
@@ -103,13 +109,13 @@ struct frame
     std::uint16_t frame_counter; // циклічний лічильник кадрів (frame_counter) 2 байти;
     SOURCE_TYPE source_id;       // ідентифікатор походження (source_id) 1 байт;
     PAYLOAD_TYPE payload_type;   // тип даних (payload_type) 1 байт;
-    std::uint32_t payload_size;  // розмір блоку даних корисного навантаження (payload_size) 4 байти;
-    void * payload;              // дані payload являють собою оцифовані відліки сигналу.
-                                 // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
+    std::uint32_t payload_size; // розмір блоку даних корисного навантаження (payload_size) 4 байти;
+    void * payload; // дані payload являють собою оцифовані відліки сигналу.
+                    // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
 };
 #pragma pack()
 
-static constexpr std::uint32_t FRAME_HEADER_SIZE {sizeof(struct frame) - sizeof(void*)};
+static constexpr std::uint32_t FRAME_HEADER_SIZE {sizeof(struct frame) - sizeof(void *)};
 
 } // namespace DATA_SOURCE_TASK
 

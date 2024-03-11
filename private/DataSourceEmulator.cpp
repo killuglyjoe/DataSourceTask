@@ -69,12 +69,12 @@ DataSourceFileEmulator::~DataSourceFileEmulator() {}
 void DataSourceFileEmulator::generateRandom()
 {
     static float val = 1.0;
-    ++val;
+    // ++val;
     // Згенеруємо випадкові числа
     // Міняти байти місцями не будемо в цьому випадку.
     for (uint32_t i = 0; i < m_buffer->totalElements(); ++i)
     {
-        // val = m_dist(m_mt); // сповільнює читання
+        val = m_dist(m_mt); // сповільнює читання
         switch (m_buffer->frame()->payload_type)
         {
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
@@ -146,11 +146,6 @@ int DataSourceFileEmulator::read(char * data, int size)
     std::copy(m_buffer->data(), m_buffer->data() + size, data);
 
     elapsed = overall_timer.elapsed();
-
-    // while (elapsed < FRAME_RATE)
-    // {
-    //     elapsed = overall_timer.elapsed();
-    // }
 
     m_elapsed = elapsed;
 

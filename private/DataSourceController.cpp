@@ -4,6 +4,9 @@
 #include "DataSourceFile.h"
 
 #include <cstring>
+#include <future>
+#include <iostream>
+#include <ostream>
 #include <thread>
 #include <atomic>
 
@@ -84,19 +87,15 @@ void DataSourceController::readData()
 {
     is_read_active = true;
 
-    Timer timer;
-    timer.reset();
 
     std::mutex read_lock;
 
+    static int ret_size = static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
+    static std::atomic<double> elapsed;
+
     while (is_read_active)
     {
-        static int ret_size   = 0;
-        static double elapsed = 0.;
-
-        std::lock_guard<std::mutex> lock(read_lock);
-
-        timer.reset();
+        Timer timer;
         elapsed = 0;
 
         // - браковані кадри заповнювати нулями
@@ -121,6 +120,7 @@ void DataSourceController::readData()
         {
             elapsed = timer.elapsed();
         }
+
         m_elapsed = elapsed;
     }
 }

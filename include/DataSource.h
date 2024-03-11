@@ -2,6 +2,7 @@
 #define DATASOURCE_H
 
 #include "globals.h"
+#include <atomic>
 
 namespace DATA_SOURCE_TASK
 {
