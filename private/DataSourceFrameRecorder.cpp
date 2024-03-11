@@ -26,7 +26,6 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
 {
     m_buffer_size = nearestPowerOfTwo(num_elements);
 
-
     // Буфери для запису розміром кратним степеня 2
     for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)
     {
@@ -51,6 +50,9 @@ void DataSourceFrameRecorder::recordBlock()
     {
         if (!m_need_record)
             continue;
+
+        Timer timer;
+        timer.reset();
 
         std::ofstream source_file(m_record_name, std::ios::out | std::ios::binary);
 
@@ -81,15 +83,14 @@ void DataSourceFrameRecorder::recordBlock()
                 std::cout << "DataSourceFrameRecorder: Fatal I/O error occurred." << std::endl;
             }
         }
+
+        m_elapsed = timer.elapsed();
     }
 }
 
 void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float>> & frame)
 {
     std::lock_guard<std::mutex> lock(m_buf_lock);
-
-    Timer timer;
-    timer.reset();
 
     std::size_t av_in_data = frame->payloadSize();
 
@@ -133,8 +134,6 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
             buf->pos            = 0;
         }
     }
-
-    m_elapsed = timer.elapsed();
 }
 
 } // namespace DATA_SOURCE_TASK

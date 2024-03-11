@@ -52,24 +52,29 @@ int main(int argc, char ** argv)
 
             int diff_frames = data_source_processor->framesTotal() - (prev_counter == -1 ? 0 : prev_counter);
 
-            std::cout << "Frame size: " << MAX_FRAME_SIZE << std::endl;
-            std::cout << "Elapsed time for frame write: " << data_source_processor->dataSource().elapsed() << std::endl;
-            std::cout << "Elapsed time for frame read: " << data_source_processor->elapsed() << std::endl;
+            std::cout << "Frame size: " << MAX_FRAME_SIZE << " bytes"<< std::endl;
+            std::cout << "Elapsed time for frame write: " << data_source_processor->writeFramelapsed() << " ms" << std::endl;
+            std::cout << "Elapsed time for frame read: " << data_source_processor->elapsed() << " ms" << std::endl;
 
-            // Заголовок, к-сть обробленних кадрів, к-сть втрачених
-            std::cout << "Frames recieved: " << data_source_processor->framesTotal() << std::endl;
-            std::cout << "Processed frames: " << diff_frames<< std::endl;
+            // Заголовок, к-сть обробленних кадрів, к-сть втрачених і відсоток втрачених кадрів за ~1сек
             std::cout << "Frame head: " << std::hex << data_source_processor->header() << std::dec << std::endl;
+            std::cout << "Frames recieved: " << data_source_processor->framesTotal() << std::endl;
+            std::cout << "Processed frames: " << diff_frames << std::endl;
             std::cout << "Frames loss: " << data_source_processor->getPacketsLoss() << std::endl;
-            std::cout << "Frames loss %: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() <<"%"<< std::endl;
+            std::cout << "% loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %" << std::endl;
 
-            std::cout << "Elapsed time for frame process: " << data_source_processor->frameProcessor().elapsed()
-                      << std::endl;
 
-            // пауза перед оновленням виводу
+            std::cout << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) / (1000. * 1000.) << " Mb/sec" << std::endl;
+
+            // Час перевторення на float
+            std::cout << "Elapsed time for frame validation: " << data_source_processor->frameValidationElapsed() << " ms" << std::endl;
+            // Час запису в файл
+            std::cout << "Elapsed time for frame record: " << data_source_processor->saveFramelapsed() << " ms" << std::endl;
+
             prev_counter = data_source_processor->framesTotal();
 
-            while (display_update_timer.elapsed() < 1000) {
+            // пауза перед оновленням виводу
+            while (display_update_timer.elapsed() < 1000.) {
             }
         }
     }

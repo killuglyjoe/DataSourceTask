@@ -41,6 +41,7 @@ public:
     void putNewFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size);
 
     inline double elapsed() { return m_elapsed; }
+    inline double saveFrameElapsed() { return m_data_source_recorder->elapsed(); }
 
 protected:
     void frameProcess();
