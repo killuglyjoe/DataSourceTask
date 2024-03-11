@@ -12,7 +12,6 @@ namespace DATA_SOURCE_TASK
 {
 
 /// \brief Клас емулює роботу зовнішноього джарела даних.
-/// В потоці йде запис в файл заданого кадру з данимим.
 class DataSourceFileEmulator final : public DataSource
 {
 public:

@@ -10,7 +10,7 @@
 
 namespace DATA_SOURCE_TASK
 {
-
+// К-сть буферів для обробки.
 static constexpr std::size_t MAX_REC_BUF_NUM {2};
 
 struct record_buffer
@@ -22,7 +22,7 @@ struct record_buffer
     std::vector<float> record_buffer;     // масив елементів
 };
 
-/// \brief Клас реалізовує функціонал складання і зберігання кадрів d afqk
+/// \brief Клас реалізовує функціонал складання і зберігання кадрів в файл.
 /// -	складати результати обробки перерозподілити у блоки,
 ///     кількість відліків сигналу у яких є найближчим степенем двійки;
 class DataSourceFrameRecorder
@@ -34,10 +34,13 @@ public:
     DataSourceFrameRecorder(const std::string & record_name, const int & num_elements);
     virtual ~DataSourceFrameRecorder() {}
 
+    /// \brief К-сть відліків для запису, к-сть кратна степеню двійки.
+    /// \return
     inline std::uint32_t bufferSize() const { return m_buffer_size; }
 
-    /// \brief Заповнюємо буфери розміром до к-сті відліків степеня 2
-    /// \param buffer - дані джерела
+    /// \brief Заповнюємо буфери розміром до к-сті відліків степеня 2.
+    /// Розмір вхідних даних менше ніж виділено під запис.
+    /// \param buffer - оброблені дані float
     void putNewFrame(std::shared_ptr<DataSourceBuffer<float>> & buffer);
 
     /// \brief Замір часу на запис в буфери

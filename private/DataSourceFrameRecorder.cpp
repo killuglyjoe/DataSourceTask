@@ -9,7 +9,7 @@
 namespace DATA_SOURCE_TASK
 {
 
-// Функція вертає найближче значення числа степеня 2 ( наприклад: для 10 -> 16)
+// Функція вертає найближче значення числа степеня 2 ( наприклад: для 10 -> 16 = 2^4)
 size_t nearestPowerOfTwo(const size_t & n)
 {
     if (n <= 1)
@@ -28,7 +28,7 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
 {
     m_buffer_size = nearestPowerOfTwo(num_elements);
 
-    // Буфери для запису розміром кратним степеня 2
+    // Буфери для запису розміром кратним степеня двійки
     for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)
     {
         struct record_buffer * buf = &m_frame_record[i];
@@ -100,8 +100,10 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
     {
         struct record_buffer * buf = &m_frame_record[i];
 
+        // перевіримо чи буфер не повний і чи є що записати ще
         if (!buf->is_full && av_in_data > 0)
         {
+            // вільне місце в буфері
             std::size_t num_data_store = buf->available_size;
 
             if (av_in_data < num_data_store)
@@ -115,22 +117,25 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
 
             std::copy(frame->payload(), frame->payload() + num_data_store, buf->record_buffer.data() + buf->pos);
 
-            buf->pos += num_data_store;
-            buf->available_size -= num_data_store;
-            buf->is_full = (buf->pos >= m_buffer_size);
+            buf->pos += num_data_store;                 // зміщуємо позицію в буфері для наступного дозапису
+            buf->available_size -= num_data_store;      // оновлюємо розмір вільного місця
+            buf->is_full = (buf->pos >= m_buffer_size); // ставим прапорець заповненості буферу
 
             if (buf->is_full)
             {
                 // Обміняємо буфери для запису
                 m_record_buffer.swap(buf->record_buffer);
 
+                // дозволяємо запис в файл
                 m_need_record = true;
             }
 
+            // зменшуємо розмір даних для копіювання в буфери запису
             av_in_data -= num_data_store;
         }
         else
         {
+            // вивільняємо дані
             buf->is_full        = false;
             buf->available_size = buf->record_buffer.size();
             buf->pos            = 0;

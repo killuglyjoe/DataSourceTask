@@ -106,13 +106,13 @@ enum class DATA_SOURCE_ERROR : int
 // дані мають кадрову структуру (приблизно):
 struct frame
 {
-    std::uint32_t magic_word;    // ідентифікатор початку кадру (magic_word) 4 байти;
-    std::uint16_t frame_counter; // циклічний лічильник кадрів (frame_counter) 2 байти;
-    SOURCE_TYPE source_id;       // ідентифікатор походження (source_id) 1 байт;
-    PAYLOAD_TYPE payload_type;   // тип даних (payload_type) 1 байт;
-    std::uint32_t payload_size; // розмір блоку даних корисного навантаження (payload_size) 4 байти;
-    void * payload; // дані payload являють собою оцифовані відліки сигналу.
-                    // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
+    std::uint32_t magic_word;       // ідентифікатор початку кадру (magic_word) 4 байти;
+    std::uint16_t frame_counter;    // циклічний лічильник кадрів (frame_counter) 2 байти;
+    SOURCE_TYPE source_id;          // ідентифікатор походження (source_id) 1 байт;
+    PAYLOAD_TYPE payload_type;      // тип даних (payload_type) 1 байт;
+    std::uint32_t payload_size;     // розмір блоку даних корисного навантаження (payload_size) 4 байти;
+    void * payload;                 // дані payload являють собою оцифовані відліки сигналу.
+                                    // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
 };
 #pragma pack()
 

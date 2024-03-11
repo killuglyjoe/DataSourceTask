@@ -119,17 +119,24 @@ public:
             m_frame->payload_size = size;
     }
 
-    /// \brief Вказівник на дані
+    /// \brief Вказівник на відліки сигналу
     /// \return
     char * payload() { return m_payload; }
 
+    /// \brief Вказівник на відліки сигналу
+    /// \return
     char * payload() const { return m_payload; }
 
     /// \brief Розмір типу даних
     /// \return
     inline std::uint8_t typeSize() { return m_type_size; }
 
+    /// \brief Весь розмір кадру
+    /// \return
     inline int size() const { return m_frame_size; };
+
+    /// \brief Вказівник на дані кадру
+    /// \return
     inline char * data() { return buffer.data(); }
 
     /// \brief К-сть відліків сигналу
