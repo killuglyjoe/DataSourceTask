@@ -31,6 +31,7 @@ public:
     inline int header() { return m_buffer[m_active_buffer]->header(); }
 
     inline int getPacketsLoss() const { return m_data_source_frm_processor->getPacketsLoss(); }
+    inline int getBadFrames() const { return m_data_source_frm_processor->getBadFrames(); }
 
     inline int framesTotal() { return m_buffer[m_active_buffer]->frameCounter(); }
 

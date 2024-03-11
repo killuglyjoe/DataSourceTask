@@ -4,9 +4,6 @@
 #include "DataSourceFile.h"
 
 #include <cstring>
-#include <future>
-#include <iostream>
-#include <ostream>
 #include <thread>
 #include <atomic>
 

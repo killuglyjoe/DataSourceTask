@@ -10,7 +10,7 @@ class DataSourceBufferInterface
 {
 public:
     DataSourceBufferInterface() {}
-    DataSourceBufferInterface & operator=(DataSourceBufferInterface & other)
+    DataSourceBufferInterface & operator=(DataSourceBufferInterface & other)noexcept
     {
         buffer.swap(other.buffer);
         return *this;

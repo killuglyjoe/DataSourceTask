@@ -126,6 +126,8 @@ void DataSourceFileEmulator::updateBufs()
 
 int DataSourceFileEmulator::read(char * data, int size)
 {
+    int ret_size = size;
+
     static Timer overall_timer; // між оновленням даних
     static Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 
@@ -136,20 +138,25 @@ int DataSourceFileEmulator::read(char * data, int size)
     overall_timer.reset();
     diff_timer.reset();
 
-    elapsed = 0;
+    elapsed = 0.;
 
     updateBufs();
 
-    // - результат DataSource::read() непередбачуваний, близький до реальної ситуації, може варіюватись у межах 0..size;
-    // int ret_size = size; // size / 2;
+    static int b = 0;
+    if (b < 10)
+    {
+        // - результат DataSource::read() непередбачуваний, близький до реальної ситуації, може варіюватись у межах 0..size;
+        ret_size = size / 2;
+        ++b;
+    }
 
-    std::copy(m_buffer->data(), m_buffer->data() + size, data);
+    std::copy(m_buffer->data(), m_buffer->data() + ret_size, data);
 
     elapsed = overall_timer.elapsed();
 
     m_elapsed = elapsed;
 
-    return size;
+    return ret_size;
 }
 
 } // namespace DATA_SOURCE_TASK

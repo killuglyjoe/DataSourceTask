@@ -23,18 +23,18 @@ class DataSourceFrameProcessor
 {
 public:
     /// \brief Клас для роботи з отриманимим кадрами.
-    DataSourceFrameProcessor(const int & frame_size,
-                             const PAYLOAD_TYPE & p_type);
+    DataSourceFrameProcessor(const int & frame_size, const PAYLOAD_TYPE & p_type);
     virtual ~DataSourceFrameProcessor();
 
     /// \brief Перевірка бракованих кадрів
     /// \param frm
     /// \param updated_size
-    bool validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size);
+    bool validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer);
 
     inline int frameSize() const { return m_frame_size; }
 
     inline int getPacketsLoss() const { return m_packets_loss; }
+    inline int getBadFrames() const { return m_bad_frames; }
 
     std::shared_ptr<DataSourceBuffer<float>> curProcessedFrame() const { return m_buffer[m_flt_ready_buffer]; }
 
@@ -52,8 +52,9 @@ private:
     void convertToFLoat(char * payload);
 
 private:
-    int m_frame_size   = 0;
-    int m_packets_loss = 0;
+    int m_frame_size   = 0; // відомий розмір кадру
+    int m_packets_loss = 0; // втрати пакетів на основі лфчильника кадрів
+    int m_bad_frames   = 0; // поганий пакет на основі повернутого розміру кадру
 
     double m_elapsed   = 0;
 
@@ -62,10 +63,17 @@ private:
     std::atomic<bool> m_can_validate;
     std::atomic<int> m_req_size;
 
-    std::atomic<int> m_src_ready_buffer;
-    std::shared_ptr<DataSourceBufferInterface> m_source_buffer[MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
+    // --------------   Данй з джерела   --------------------
+    std::atomic<int> m_src_ready_buffer; // 0..MAX_PROCESSING_BUF_NUM-1
+    std::atomic<int> m_active_buffer;    // 0 або 1
 
-    std::atomic<int> m_flt_ready_buffer;
+    // Два буфери - один наповнюємо з іншим працюємо. Потім навпаки
+    std::shared_ptr<DataSourceBufferInterface> m_source_buffer[MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
+    std::shared_ptr<DataSourceBufferInterface> m_source_buffer2[MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
+
+
+    // --------------   Оброблені дані (float)   --------------------
+    std::atomic<int> m_flt_ready_buffer; // 0..MAX_PROCESSING_BUF_NUM-1
     std::vector<std::shared_ptr<DataSourceBuffer<float>>> m_buffer; // дані будуть перетворені в float
 
     std::unique_ptr<DataSourceFrameRecorder> m_data_source_recorder;
