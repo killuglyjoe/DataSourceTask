@@ -2,7 +2,7 @@
 #define GLOBALS_H
 
 #include <atomic>
-#include <cstdint>'
+#include <cstdint>
 #ifdef WIN32
 #include <profileapi.h>
 #include <winnt.h>
