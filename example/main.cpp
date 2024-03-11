@@ -62,7 +62,7 @@ int main(int argc, char ** argv)
             std::cout << "Processed frames: " << diff_frames << std::endl;
             std::cout << "Bad frames: " << data_source_processor->getBadFrames() << std::endl;
             std::cout << "Frames loss: " << data_source_processor->getPacketsLoss() << std::endl;
-            std::cout << "% loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %" << std::endl;
+            std::cout << "Percentage loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %" << std::endl;
 
             // frame rate per second
             std::cout << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) / (1000. * 1000.) << " Mb/sec" << std::endl;

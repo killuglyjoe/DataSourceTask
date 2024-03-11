@@ -17,6 +17,9 @@ enum class DATA_SOURCE_HW_CONV_TYPE : int
     DATA_SOURCE_HW_CONV_TYPE_GPU
 };
 
+// Буферізація масивів вхідних даних
+static constexpr int BUFERIZATION_NUM {2};
+
 /// \brief Клас для валідації отриманого кадру з джерела даних.
 /// Робить перевірку і складання кадрів.
 class DataSourceFrameProcessor
@@ -63,13 +66,13 @@ private:
     std::atomic<bool> m_can_validate;
     std::atomic<int> m_req_size;
 
-    // --------------   Данй з джерела   --------------------
+    // --------------   Дані з джерела   --------------------
     std::atomic<int> m_src_ready_buffer; // 0..MAX_PROCESSING_BUF_NUM-1
     std::atomic<int> m_active_buffer;    // 0 або 1
 
     // Два буфери - один наповнюємо з іншим працюємо. Потім навпаки
-    std::shared_ptr<DataSourceBufferInterface> m_source_buffer[MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
-    std::shared_ptr<DataSourceBufferInterface> m_source_buffer2[MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
+    std::shared_ptr<DataSourceBufferInterface> m_source_buffer[BUFERIZATION_NUM][MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
+    // std::shared_ptr<DataSourceBufferInterface> m_source_buffer2[MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
 
 
     // --------------   Оброблені дані (float)   --------------------

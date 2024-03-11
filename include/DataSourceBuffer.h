@@ -2,6 +2,7 @@
 #define DATASOURCEBUFFER_H
 
 #include "globals.h"
+
 #include <vector>
 
 namespace DATA_SOURCE_TASK
@@ -10,13 +11,31 @@ class DataSourceBufferInterface
 {
 public:
     DataSourceBufferInterface() {}
-    DataSourceBufferInterface & operator=(DataSourceBufferInterface & other)noexcept
+
+    DataSourceBufferInterface & operator=(DataSourceBufferInterface & other) noexcept
     {
         buffer.swap(other.buffer);
+
+        m_frame   = reinterpret_cast<struct frame *>(buffer.data());
+        m_payload = reinterpret_cast<char *>(buffer.data() + FRAME_HEADER_SIZE);
+
         return *this;
     }
-    DataSourceBufferInterface(DataSourceBufferInterface & other) noexcept { buffer.swap(other.buffer); }
-    DataSourceBufferInterface(DataSourceBufferInterface && other) noexcept { buffer.swap(other.buffer); }
+
+    DataSourceBufferInterface(DataSourceBufferInterface & other) noexcept
+    {
+        buffer.swap(other.buffer);
+        m_frame   = reinterpret_cast<struct frame *>(buffer.data());
+        m_payload = reinterpret_cast<char *>(buffer.data() + FRAME_HEADER_SIZE);
+    }
+
+    DataSourceBufferInterface(DataSourceBufferInterface && other) noexcept
+    {
+        buffer.swap(other.buffer);
+        m_frame   = reinterpret_cast<struct frame *>(buffer.data());
+        m_payload = reinterpret_cast<char *>(buffer.data() + FRAME_HEADER_SIZE);
+    }
+
     virtual ~DataSourceBufferInterface() = default;
 
     inline struct frame * frame() { return m_frame; };

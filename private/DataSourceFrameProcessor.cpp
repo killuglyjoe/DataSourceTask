@@ -17,7 +17,8 @@ inline float validateFloat(const float & falue)
         return 0.;
 }
 
-DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const PAYLOAD_TYPE & p_type):
+DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size,
+                                                   const PAYLOAD_TYPE & p_type):
     m_frame_size {frame_size},
     m_packets_loss {0},
     m_bad_frames {0},
@@ -31,37 +32,45 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size, const
     {
     case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
     {
-        for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+        for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
         {
-            m_source_buffer[i]  = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
-            m_source_buffer2[i] = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
+            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+            {
+                m_source_buffer[b][i]  = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
+            }
         }
     }
     break;
     case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
     {
-        for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+        for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
         {
-            m_source_buffer[i]  = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
-            m_source_buffer2[i] = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
+            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+            {
+                m_source_buffer[b][i]  = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
+            }
         }
     }
     break;
     case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
     {
-        for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+        for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
         {
-            m_source_buffer[i]  = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
-            m_source_buffer2[i] = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
+            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+            {
+                m_source_buffer[b][i]  = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
+            }
         }
     }
     break;
     case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
     {
-        for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+        for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
         {
-            m_source_buffer[i]  = std::make_shared<DataSourceBuffer<float>>(frame_size);
-            m_source_buffer2[i] = std::make_shared<DataSourceBuffer<float>>(frame_size);
+            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
+            {
+                m_source_buffer[b][i]  = std::make_shared<DataSourceBuffer<float>>(frame_size);
+            }
         }
         break;
     }
@@ -94,14 +103,15 @@ void DataSourceFrameProcessor::frameProcess()
             {
                 bool is_validated = false;
 
-                if (m_active_buffer == 1)
+                // поточний буфер оновлюється, тому беремо попередній.
+                int ready_buffer = m_active_buffer - 1;
+
+                if (ready_buffer < 0)
                 {
-                    is_validated = validateFrame(m_source_buffer[idx]);
+                    ready_buffer = BUFERIZATION_NUM - 1;
                 }
-                else
-                {
-                    is_validated = validateFrame(m_source_buffer2[idx]);
-                }
+
+                is_validated = validateFrame(m_source_buffer[ready_buffer][idx]);
 
                 if (is_validated)
                 {
@@ -180,11 +190,11 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
     {
         m_src_ready_buffer = -1;
 
+        ++m_active_buffer;
         // міняєм буфер
-        if (m_active_buffer == 0)
-            m_active_buffer = 1;
-        else
+        if (m_active_buffer >= BUFERIZATION_NUM)
             m_active_buffer = 0;
+
 
         m_can_validate = true;
     }
@@ -193,14 +203,7 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
     ++m_src_ready_buffer;
 
     // Обміняємо буфери для обробки
-    if (m_active_buffer == 0)
-    {
-        m_source_buffer[m_src_ready_buffer].swap(buffer);
-    }
-    else
-    {
-        m_source_buffer2[m_src_ready_buffer].swap(buffer);
-    }
+    m_source_buffer[m_active_buffer][m_src_ready_buffer].swap(buffer);
 
     // розмір не відповідає необхідному
     if (updated_size != frameSize())

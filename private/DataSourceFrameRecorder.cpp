@@ -21,8 +21,10 @@ size_t nearestPowerOfTwo(const size_t & n)
 // Активатор потоку запису
 static std::atomic<bool> is_can_record_active;
 
-DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name, const int & num_elements):
-    m_record_name {record_name}, m_need_record {false}
+DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name,
+                                                 const int & num_elements):
+    m_record_name {record_name},
+    m_need_record {false}
 {
     m_buffer_size = nearestPowerOfTwo(num_elements);
 

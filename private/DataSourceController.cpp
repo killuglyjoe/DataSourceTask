@@ -84,9 +84,6 @@ void DataSourceController::readData()
 {
     is_read_active = true;
 
-
-    std::mutex read_lock;
-
     static int ret_size = static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
     static std::atomic<double> elapsed;
 
