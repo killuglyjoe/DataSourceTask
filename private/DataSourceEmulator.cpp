@@ -127,7 +127,7 @@ void DataSourceFileEmulator::updateBufs()
 {
     static uint16_t frm_counter = 0;
 
-    // generateRandom();
+    generateRandom();
 
     ++frm_counter;
     if (frm_counter >= UINT16_MAX)

@@ -50,7 +50,6 @@ int main(int argc, char ** argv)
             // Читимо консоль перед новим виводом даних
             system(CLEAR_CONSOLE);
 
-
             // грубий лічильник оброблених кадрів
             static int prev_counter = -1;
 
