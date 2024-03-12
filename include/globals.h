@@ -21,10 +21,10 @@ public:
     void reset()
     {
         // Get the frequency of the performance counter
-        QueryPerformanceFrequency(&frequency);
+        QueryPerformanceFrequency(&m_frequency);
 
         // Record the start time
-        QueryPerformanceCounter(&start);
+        QueryPerformanceCounter(&m_start);
     }
     double elapsed()
     {
@@ -32,12 +32,12 @@ public:
         QueryPerformanceCounter(&end);
 
         // Calculate the elapsed time in milliseconds
-        return static_cast<double>(end.QuadPart - start.QuadPart) * 1000.0 / frequency.QuadPart;
+        return static_cast<double>(end.QuadPart - m_start.QuadPart) * 1000.0 / m_frequency.QuadPart;
     }
 
 private:
-    LARGE_INTEGER start;
-    LARGE_INTEGER frequency;
+    LARGE_INTEGER m_start;
+    LARGE_INTEGER m_frequency;
 };
 #else
 class Timer
@@ -77,24 +77,26 @@ private:
 static constexpr double FRAME_RATE {1000. / 200.}; // 200 Hz = 5ms
 
 // К-сть буферів під читання/обробку
-static constexpr std::size_t MAX_PROCESSING_BUF_NUM {10};
+static constexpr std::size_t MAX_PROCESSING_BUF_NUM {4};
 
 // тип даних payload_type може бути:
 enum class PAYLOAD_TYPE : char
 {
-    PAYLOAD_TYPE_8_BIT_UINT = 0u,   //  8 bit unsigned int;
-    PAYLOAD_TYPE_16_BIT_INT,        //  16 bit signed int;
-    PAYLOAD_TYPE_32_BIT_INT,        //  32 bit signed int;
-    PAYLOAD_TYPE_32_BIT_IEEE_FLOAT, //  32 bit IEEE 754 float;
-    PAYLOAD_TYPE_UNSUPPORTED = 127u
+    PAYLOAD_TYPE_8_BIT_UINT        = 0u, //  8 bit unsigned int;
+    PAYLOAD_TYPE_16_BIT_INT        = 1u, //  16 bit signed int;
+    PAYLOAD_TYPE_32_BIT_INT        = 2u, //  32 bit signed int;
+    PAYLOAD_TYPE_32_BIT_IEEE_FLOAT = 3u, //  32 bit IEEE 754 float;
+    PAYLOAD_TYPE_UNSUPPORTED       = 4u,
+    PAYLOAD_TYPE_SIZE              = 5u
 };
 
 // припускаємо шо можуть бути наступні типи джерел
 enum class SOURCE_TYPE : char
 {
-    SOURCE_TYPE_FILE = 0u,
-    SOURCE_TYPE_EMULATOR,
-    SOURCE_TYPE_UNDEFINED
+    SOURCE_TYPE_FILE      = 0u,
+    SOURCE_TYPE_EMULATOR  = 1u,
+    SOURCE_TYPE_UNDEFINED = 2u,
+    SOURCE_TYPE_SIZE      = 2u
 };
 
 enum class DATA_SOURCE_ERROR : int
@@ -102,19 +104,17 @@ enum class DATA_SOURCE_ERROR : int
     READ_SOURCE_ERROR = -1,
 };
 
-#pragma pack(1)
 // дані мають кадрову структуру (приблизно):
 struct frame
 {
-    std::uint32_t magic_word;       // ідентифікатор початку кадру (magic_word) 4 байти;
-    std::uint16_t frame_counter;    // циклічний лічильник кадрів (frame_counter) 2 байти;
-    SOURCE_TYPE source_id;          // ідентифікатор походження (source_id) 1 байт;
-    PAYLOAD_TYPE payload_type;      // тип даних (payload_type) 1 байт;
-    std::uint32_t payload_size;     // розмір блоку даних корисного навантаження (payload_size) 4 байти;
-    void * payload;                 // дані payload являють собою оцифовані відліки сигналу.
-                                    // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
+    std::uint32_t magic_word;    // ідентифікатор початку кадру (magic_word) 4 байти;
+    std::uint16_t frame_counter; // циклічний лічильник кадрів (frame_counter) 2 байти;
+    SOURCE_TYPE source_id;       // ідентифікатор походження (source_id) 1 байт;
+    PAYLOAD_TYPE payload_type;   // тип даних (payload_type) 1 байт;
+    std::uint32_t payload_size;  // розмір блоку даних корисного навантаження (payload_size) 4 байти;
+    void * payload;              // дані payload являють собою оцифовані відліки сигналу.
+                                 // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
 };
-#pragma pack()
 
 static constexpr std::uint32_t FRAME_HEADER_SIZE {sizeof(struct frame) - sizeof(void *)};
 

@@ -31,7 +31,7 @@ public:
 
     /// \brief Значення magic_word
     /// \return
-    inline int header() { return m_buffer[m_active_buffer]->header(); }
+    inline int header() { return m_buffer->header(); }
     /// \brief К-сть втрачених пакетів, рахуються по лячильнику в заголовку кадру
     /// \return
     inline int getPacketsLoss() const { return m_data_source_frm_processor->getPacketsLoss(); }
@@ -41,7 +41,7 @@ public:
     inline int getBadFrames() const { return m_data_source_frm_processor->getBadFrames(); }
     /// \brief Поточний лічильник кадрів
     /// \return
-    inline int framesTotal() { return m_buffer[m_active_buffer]->frameCounter(); }
+    inline int framesTotal() { return m_buffer->frameCounter(); }
     /// \brief Час читання з джерела. Повинен бути менше FRAME_RATE.
     /// \return
     inline double elapsed() { return m_elapsed; }
@@ -62,11 +62,10 @@ protected:
 private:
     std::atomic<int> m_elapsed; // час читання з джерела, мс
 
-    std::unique_ptr<DataSource> m_data_source;                             // клас джерела даних
-    std::unique_ptr<DataSourceFrameProcessor> m_data_source_frm_processor; // клас для обробки даних
-    std::shared_ptr<DataSourceBufferInterface> m_buffer[MAX_PROCESSING_BUF_NUM]; // масиви для зберішання вх. даних
+    std::unique_ptr<DataSource> m_data_source;                              // клас джерела даних
+    std::unique_ptr<DataSourceFrameProcessor> m_data_source_frm_processor;  // клас для обробки даних
+    std::shared_ptr<DataSourceBufferInterface> m_buffer;                    // масиви для зберішання вх. даних
 
-    std::atomic<int> m_active_buffer; // поточний буфер для обробки
     std::mutex m_mutex;
 };
 

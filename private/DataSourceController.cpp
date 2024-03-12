@@ -18,41 +18,11 @@ DataSourceController::DataSourceController(
     const std::string & source_path,
     const SOURCE_TYPE & source_type,
     const PAYLOAD_TYPE & p_type,
-    const uint32_t & frame_size):
-    m_active_buffer {0}
+    const uint32_t & frame_size)
 {
     try
     {
-        // виділимо данні
-        switch (p_type)
-        {
-        case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
-        {
-            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
-                m_buffer[i] = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
-        }
-        break;
-        case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
-        {
-            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
-                m_buffer[i] = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
-        }
-        break;
-        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
-        {
-            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
-                m_buffer[i] = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
-        }
-        break;
-        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
-        {
-            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
-                m_buffer[i] = std::make_shared<DataSourceBuffer<float>>(frame_size);
-            break;
-        }
-        default:
-            break;
-        }
+        m_buffer = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
 
         // Створимо джерело даних
         switch (source_type)
@@ -93,23 +63,20 @@ void DataSourceController::readData()
         elapsed = 0;
 
         // - браковані кадри заповнювати нулями
-        memset(m_buffer[m_active_buffer]->payload(), 0, m_buffer[m_active_buffer]->payloadSize());
+        memset(m_buffer->payload(), 0, m_buffer->payloadSize());
 
         // читаємо з джерела
-        ret_size = m_data_source->read(m_buffer[m_active_buffer]->data(), m_buffer[m_active_buffer]->size());
+        ret_size = m_data_source->read(m_buffer->data(), m_buffer->size());
 
         if (ret_size != static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR))
         {
             // обробка даних
-            m_data_source_frm_processor->putNewFrame(m_buffer[m_active_buffer], ret_size);
+            m_data_source_frm_processor->putNewFrame(m_buffer, ret_size);
         }
-
-        ++m_active_buffer;
-        if (m_active_buffer == MAX_PROCESSING_BUF_NUM)
-            m_active_buffer = 0;
 
         elapsed = timer.elapsed();
 
+        // 200 Hz
         while (elapsed < FRAME_RATE)
         {
             elapsed = timer.elapsed();

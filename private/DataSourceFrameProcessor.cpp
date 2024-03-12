@@ -28,59 +28,19 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size,
     m_flt_ready_buffer {-1}
 {
     // виділимо данні
-    switch (p_type)
+    for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
     {
-    case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
-    {
-        for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
+        for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
         {
-            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
-            {
-                m_source_buffer[b][i]  = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
-            }
+            m_source_buffer[b][i] = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
         }
-    }
-    break;
-    case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
-    {
-        for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
-        {
-            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
-            {
-                m_source_buffer[b][i]  = std::make_shared<DataSourceBuffer<std::int16_t>>(frame_size);
-            }
-        }
-    }
-    break;
-    case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
-    {
-        for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
-        {
-            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
-            {
-                m_source_buffer[b][i]  = std::make_shared<DataSourceBuffer<std::int32_t>>(frame_size);
-            }
-        }
-    }
-    break;
-    case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
-    {
-        for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
-        {
-            for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
-            {
-                m_source_buffer[b][i]  = std::make_shared<DataSourceBuffer<float>>(frame_size);
-            }
-        }
-        break;
-    }
-    default:
-        break;
     }
 
     // float буфери
     for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; i++)
+    {
         m_buffer.push_back(std::make_shared<DataSourceBuffer<float>>(frame_size));
+    }
 
     m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", m_buffer[0]->totalElements());
 
@@ -131,7 +91,7 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
     frame * frm    = buffer->frame();
-    char * payload = buffer->payload();
+    char * buf     = buffer->payload();
 
     static int cur_frm_counter = -1;
 
@@ -167,17 +127,38 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
     // до єдиного типу 32 bit IEEE 754 float та приведення до діапазону +/-1.0;
     if (frm->payload_type != PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT)
     {
-        // CPU
         for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
         {
-            cur_buf->payload()[i] = validateFloat(static_cast<float>(payload[i]));
-        }
+            switch (frm->payload_type)
+            {
+            case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
+            {
+                std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(buf);
+                cur_buf->payload()[i]  = validateFloat(static_cast<float>(payload[i]));
+            }
+            break;
+            case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
+            {
+                std::int16_t * payload = reinterpret_cast<std::int16_t *>(buf);
+                cur_buf->payload()[i]  = validateFloat(static_cast<float>(payload[i]));
+            }
+            break;
+            case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
+            {
+                std::int32_t * payload = reinterpret_cast<std::int32_t *>(buf);
+                cur_buf->payload()[i]  = validateFloat(static_cast<float>(payload[i]));
+            }
+            break;
+            default:
+                break;
+            }
 
-        return true;
+            return true;
+        }
     }
 
     // перекладемо дані якшо вони вже в форматі float
-    std::copy(payload, payload + cur_buf->payloadSize(), cur_buf->payload());
+    std::copy(buf, buf + cur_buf->payloadSize(), cur_buf->payload());
 
     return true;
 }
@@ -191,6 +172,7 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
         m_src_ready_buffer = -1;
 
         ++m_active_buffer;
+
         // міняєм буфер
         if (m_active_buffer >= BUFERIZATION_NUM)
             m_active_buffer = 0;
