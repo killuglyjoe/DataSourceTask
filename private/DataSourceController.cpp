@@ -43,7 +43,7 @@ DataSourceController::DataSourceController(
         std::runtime_error(e.what()); // треба використовувати власні обгортки над стандартнимим виключеннями
     }
 
-    m_data_source_frm_processor = std::make_unique<DataSourceFrameProcessor>(frame_size, p_type);
+    m_data_source_frm_processor = std::make_unique<DataSourceFrameProcessor>(frame_size);
 
     // - організувати зчитування даних в окремому потоці;
     // Потік який читає данні

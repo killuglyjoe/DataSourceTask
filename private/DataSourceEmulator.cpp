@@ -8,7 +8,7 @@ namespace DATA_SOURCE_TASK
 
 static constexpr bool is_used_random {false};
 
-float randMinToMax(const float &min, const float &max)
+float randMinToMax(const float & min, const float & max)
 {
     return min + (rand() / (RAND_MAX / (max - min)));
 }
@@ -40,7 +40,7 @@ DataSourceFileEmulator::DataSourceFileEmulator(const DATA_SOURCE_TASK::SOURCE_TY
         std::cout << "DataSourceFileEmulator: no frame" << std::endl;
     }
 
-    srand((unsigned int)time(NULL));
+    srand((unsigned int) time(NULL));
     generateRandom();
 }
 
@@ -59,7 +59,9 @@ void DataSourceFileEmulator::generateRandom()
     {
         std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(m_buffer->payload());
 
-        for (uint32_t i = 0; i < m_buffer->totalElements(); ++i)
+        static const uint32_t total_elements = m_buffer->payloadSize() / sizeof(std::uint8_t);
+
+        for (uint32_t i = 0; i < total_elements; ++i)
         {
             if (is_used_random)
                 val = randMinToMax(0, UINT8_MAX);
@@ -73,7 +75,9 @@ void DataSourceFileEmulator::generateRandom()
     {
         std::int16_t * payload = reinterpret_cast<std::int16_t *>(m_buffer->payload());
 
-        for (uint32_t i = 0; i < m_buffer->totalElements(); ++i)
+        static const uint32_t total_elements = m_buffer->payloadSize() / sizeof(std::int16_t);
+
+        for (uint32_t i = 0; i < total_elements; ++i)
         {
             if (is_used_random)
                 val = randMinToMax(INT16_MIN, INT16_MAX);
@@ -87,7 +91,9 @@ void DataSourceFileEmulator::generateRandom()
     {
         std::int32_t * payload = reinterpret_cast<std::int32_t *>(m_buffer->payload());
 
-        for (uint32_t i = 0; i < m_buffer->totalElements(); ++i)
+        static const uint32_t total_elements = m_buffer->payloadSize() / sizeof(std::int32_t);
+
+        for (uint32_t i = 0; i < total_elements; ++i)
         {
             if (is_used_random)
                 val = randMinToMax(INT32_MIN, INT32_MAX);
@@ -100,8 +106,9 @@ void DataSourceFileEmulator::generateRandom()
     case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
     {
         float * payload = reinterpret_cast<float *>(m_buffer->payload());
+        static const uint32_t total_elements = m_buffer->payloadSize() / sizeof(float);
 
-        for (uint32_t i = 0; i < m_buffer->totalElements(); ++i)
+        for (uint32_t i = 0; i < total_elements; ++i)
         {
             if (is_used_random)
                 val = randMinToMax(INT32_MIN, INT32_MAX);
@@ -113,7 +120,6 @@ void DataSourceFileEmulator::generateRandom()
 
     default:
         break;
-
     }
 }
 
@@ -121,7 +127,7 @@ void DataSourceFileEmulator::updateBufs()
 {
     static uint16_t frm_counter = 0;
 
-    generateRandom();
+    // generateRandom();
 
     ++frm_counter;
     if (frm_counter >= UINT16_MAX)

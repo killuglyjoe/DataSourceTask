@@ -28,7 +28,7 @@ class DataSourceFrameProcessor
 {
 public:
     /// \brief Клас для роботи з отриманимим кадрами.
-    DataSourceFrameProcessor(const int & frame_size, const PAYLOAD_TYPE & p_type);
+    DataSourceFrameProcessor(const int & frame_size);
     virtual ~DataSourceFrameProcessor();
 
     /// \brief Перевірка бракованих кадрів.
@@ -69,9 +69,9 @@ private:
 private:
     int m_frame_size   = 0; // відомий розмір кадру
     int m_packets_loss = 0; // втрати пакетів на основі лфчильника кадрів
-    int m_bad_frames   = 0; // поганий пакет на основі повернутого розміру кадру
+    int m_bad_frames = 0; // поганий пакет на основі повернутого розміру кадру
 
-    double m_elapsed   = 0; // час обробки вх. даних, мс
+    double m_elapsed = 0; // час обробки вх. даних, мс
 
     std::mutex m_process_mutex;
 
@@ -83,13 +83,14 @@ private:
     std::atomic<int> m_active_buffer;    // 0 або 1
 
     // Два буфери - один наповнюємо з іншим працюємо. Потім навпаки
-    std::shared_ptr<DataSourceBufferInterface> m_source_buffer[BUFERIZATION_NUM][MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
+    std::shared_ptr<DataSourceBufferInterface> m_source_buffer[BUFERIZATION_NUM]
+                                                              [MAX_PROCESSING_BUF_NUM]; // дані для swap з джерела
 
     // --------------   Оброблені дані (float)   --------------------
-    std::atomic<int> m_flt_ready_buffer; // 0..MAX_PROCESSING_BUF_NUM-1
+    std::atomic<int> m_flt_ready_buffer;                            // 0..MAX_PROCESSING_BUF_NUM-1
     std::vector<std::shared_ptr<DataSourceBuffer<float>>> m_buffer; // дані будуть перетворені в float
 
-    std::unique_ptr<DataSourceFrameRecorder> m_data_source_recorder;  // клас для запису оброблених даних в файл.
+    std::unique_ptr<DataSourceFrameRecorder> m_data_source_recorder; // клас для запису оброблених даних в файл.
 };
 
 } // namespace DATA_SOURCE_TASK

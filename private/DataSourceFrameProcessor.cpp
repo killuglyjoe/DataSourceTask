@@ -17,8 +17,7 @@ inline float validateFloat(const float & falue)
         return 0.;
 }
 
-DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size,
-                                                   const PAYLOAD_TYPE & p_type):
+DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     m_frame_size {frame_size},
     m_packets_loss {0},
     m_bad_frames {0},
@@ -90,9 +89,10 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
-    frame * frm    = buffer->frame();
-    char * buf     = buffer->payload();
+    frame * frm = buffer->frame();
+    char * buf  = buffer->payload();
 
+    // розбираємось з лічильком кадру
     static int cur_frm_counter = -1;
 
     if (cur_frm_counter == -1)
@@ -112,6 +112,7 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
 
     cur_frm_counter = frm->frame_counter;
 
+    // сформуємо float масиви
     if (m_flt_ready_buffer >= static_cast<int>(MAX_PROCESSING_BUF_NUM) - 1)
         m_flt_ready_buffer = -1;
 
@@ -127,34 +128,40 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
     // до єдиного типу 32 bit IEEE 754 float та приведення до діапазону +/-1.0;
     if (frm->payload_type != PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT)
     {
-        for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
+        switch (frm->payload_type)
         {
-            switch (frm->payload_type)
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
+        {
+            std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(buf);
+            for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
             {
-            case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
-            {
-                std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(buf);
-                cur_buf->payload()[i]  = validateFloat(static_cast<float>(payload[i]));
+                cur_buf->payload()[i] = validateFloat(static_cast<float>(payload[i]));
             }
-            break;
-            case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
-            {
-                std::int16_t * payload = reinterpret_cast<std::int16_t *>(buf);
-                cur_buf->payload()[i]  = validateFloat(static_cast<float>(payload[i]));
-            }
-            break;
-            case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
-            {
-                std::int32_t * payload = reinterpret_cast<std::int32_t *>(buf);
-                cur_buf->payload()[i]  = validateFloat(static_cast<float>(payload[i]));
-            }
-            break;
-            default:
-                break;
-            }
-
-            return true;
         }
+        break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
+        {
+            std::int16_t * payload = reinterpret_cast<std::int16_t *>(buf);
+            for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
+            {
+                cur_buf->payload()[i] = validateFloat(static_cast<float>(payload[i]));
+            }
+        }
+        break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
+        {
+            std::int32_t * payload = reinterpret_cast<std::int32_t *>(buf);
+            for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
+            {
+                cur_buf->payload()[i] = validateFloat(static_cast<float>(payload[i]));
+            }
+        }
+        break;
+        default:
+            break;
+        }
+
+        return true;
     }
 
     // перекладемо дані якшо вони вже в форматі float
@@ -176,7 +183,6 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
         // міняєм буфер
         if (m_active_buffer >= BUFERIZATION_NUM)
             m_active_buffer = 0;
-
 
         m_can_validate = true;
     }
