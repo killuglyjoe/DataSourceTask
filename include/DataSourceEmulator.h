@@ -39,8 +39,6 @@ private:
     int m_byte_size = 0;
 
     std::mutex m_read_lock;
-    std::mt19937 m_mt;
-    std::uniform_real_distribution<float> m_dist;
 
     std::shared_ptr<DataSourceBufferInterface> m_buffer;
 };

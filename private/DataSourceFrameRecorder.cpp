@@ -56,6 +56,7 @@ void DataSourceFrameRecorder::recordBlock()
         Timer timer;
         timer.reset();
 
+        // Будемо просто перезаписувати поточний файл.
         std::ofstream source_file(m_record_name, std::ios::out | std::ios::binary);
 
         if (!source_file)
