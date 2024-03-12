@@ -50,6 +50,9 @@ void DataSourceFileEmulator::generateRandom()
 {
     static float val = 1.f;
 
+    if (!is_used_random)
+        val += 1.f;
+
     switch (m_buffer->frame()->payload_type)
     {
     case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
@@ -60,8 +63,7 @@ void DataSourceFileEmulator::generateRandom()
         {
             if (is_used_random)
                 val = randMinToMax(0, UINT8_MAX);
-            else
-                val += 1.f;
+
             payload[i] = static_cast<std::uint8_t>(val);
         }
     }
@@ -75,8 +77,7 @@ void DataSourceFileEmulator::generateRandom()
         {
             if (is_used_random)
                 val = randMinToMax(INT16_MIN, INT16_MAX);
-            else
-                val += 1.f;
+
             payload[i] = static_cast<std::int16_t>(val);
         }
     }
@@ -90,8 +91,7 @@ void DataSourceFileEmulator::generateRandom()
         {
             if (is_used_random)
                 val = randMinToMax(INT32_MIN, INT32_MAX);
-            else
-                val += 1.f;
+
             payload[i] = static_cast<std::int32_t>(val);
         }
     }
@@ -105,8 +105,7 @@ void DataSourceFileEmulator::generateRandom()
         {
             if (is_used_random)
                 val = randMinToMax(INT32_MIN, INT32_MAX);
-            else
-                val += 1.f;
+
             payload[i] = val;
         }
     }
