@@ -152,7 +152,7 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
 
             for (std::uint32_t i = 0; i < total_elements; ++i)
             {
-                cur_buf->payload()[i] = (static_cast<float>(payload[i]));
+                cur_buf->payload()[i] = static_cast<float>(payload[i]);
             }
         }
         break;
@@ -165,7 +165,7 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
 
             for (std::uint32_t i = 0; i < total_elements; ++i)
             {
-                cur_buf->payload()[i] = (static_cast<float>(payload[i]));
+                cur_buf->payload()[i] = static_cast<float>(payload[i]);
             }
         }
         break;
@@ -178,7 +178,7 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
     }
 
     // перекладемо дані якшо вони вже в форматі float
-    std::copy(buf, buf + cur_buf->payloadSize(), cur_buf->payload());
+    memcpy(cur_buf->payload(), buf, buffer->payloadSize());
 
     return total_elements;
 }

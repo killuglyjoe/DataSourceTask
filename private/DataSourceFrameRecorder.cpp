@@ -97,7 +97,8 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
     std::lock_guard<std::mutex> lock(m_buf_lock);
 
     // Реальний розмір оброблених даних
-    std::size_t av_in_data = total_elements * sizeof(float);
+    static constexpr std::size_t FL_SIZE {sizeof(float)};
+    std::size_t av_in_data = total_elements * FL_SIZE;
 
     // Заповнимо масиви під запис
     for (std::uint8_t i = 0; i < MAX_REC_BUF_NUM; ++i)
@@ -119,7 +120,7 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
                 num_data_store = buf->available_size;
             }
 
-            std::copy(frame->payload(), frame->payload() + num_data_store, buf->record_buffer.data() + buf->pos);
+            memcpy(buf->record_buffer.data() + buf->pos, frame->payload(), num_data_store);
 
             buf->pos += num_data_store;                 // зміщуємо позицію в буфері для наступного дозапису
             buf->available_size -= num_data_store;      // оновлюємо розмір вільного місця
