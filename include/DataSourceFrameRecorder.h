@@ -19,6 +19,7 @@ struct record_buffer
     bool is_full                 = false; // готовність до запису в файл
     std::uint32_t pos            = 0;     // поточна позиція запису в буфер
     std::uint32_t available_size = 0;     // залишок елементів для перезапису
+    std::uint32_t total_elements = 0;     // к-сть едементів для запису в файл
     std::vector<float> record_buffer;     // масив елементів
 };
 
@@ -41,7 +42,8 @@ public:
     /// \brief Заповнюємо буфери розміром до к-сті відліків степеня 2.
     /// Розмір вхідних даних менше ніж виділено під запис.
     /// \param buffer - оброблені дані float
-    void putNewFrame(std::shared_ptr<DataSourceBuffer<float>> & buffer);
+    /// \param total_elements - к-сть відліків float
+    void putNewFrame(std::shared_ptr<DataSourceBuffer<float>> & buffer, const int &total_elements);
 
     /// \brief Замір часу на запис в буфери
     /// \return
@@ -64,7 +66,7 @@ private:
 
     struct record_buffer m_frame_record[MAX_REC_BUF_NUM]; // буфери даних для запису в файл
 
-    std::vector<float> m_record_buffer; // дані для запису в файл
+    struct record_buffer m_record_buffer; // дані для запису в файл
 };
 
 } // namespace DATA_SOURCE_TASK

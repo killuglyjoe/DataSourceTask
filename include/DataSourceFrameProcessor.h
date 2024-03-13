@@ -33,9 +33,9 @@ public:
 
     /// \brief Перевірка бракованих кадрів.
     /// Конвертація в float.
-    /// \param frm
-    /// \param updated_size
-    bool validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer);
+    /// \param buffer - дані з джерела
+    /// \return - к-сть rjydthnjdfyb[ відліків float
+    int validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer);
     /// \brief Розмір кадру
     /// \return
     inline int frameSize() const { return m_frame_size; }

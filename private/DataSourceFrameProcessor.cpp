@@ -9,14 +9,6 @@ namespace DATA_SOURCE_TASK
 std::thread process_thread;
 static std::atomic<bool> is_process_active {true};
 
-inline float validateFloat(const float & falue)
-{
-    if (std::isfinite(falue))
-        return falue;
-    else
-        return 0.;
-}
-
 DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     m_frame_size {frame_size},
     m_packets_loss {0},
@@ -35,13 +27,16 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
         }
     }
 
+    const int max_total_elements = m_source_buffer[0][0]->totalElements();
+    const int float_frame_size = FRAME_HEADER_SIZE + max_total_elements * sizeof(float);
+
     // float буфери
     for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; i++)
     {
-        m_buffer.push_back(std::make_shared<DataSourceBuffer<float>>(frame_size));
+        m_buffer.push_back(std::make_shared<DataSourceBuffer<float>>(float_frame_size));
     }
 
-    m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", m_buffer[0]->totalElements());
+    m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", max_total_elements);
 
     process_thread = std::thread(&DataSourceFrameProcessor::frameProcess, this);
 }
@@ -60,7 +55,7 @@ void DataSourceFrameProcessor::frameProcess()
 
             for (std::size_t idx = 0; idx < MAX_PROCESSING_BUF_NUM; ++idx)
             {
-                bool is_validated = false;
+                int total_elements = 0;
 
                 // поточний буфер оновлюється, тому беремо попередній.
                 int ready_buffer = m_active_buffer - 1;
@@ -70,12 +65,12 @@ void DataSourceFrameProcessor::frameProcess()
                     ready_buffer = BUFERIZATION_NUM - 1;
                 }
 
-                is_validated = validateFrame(m_source_buffer[ready_buffer][idx]);
+                total_elements = validateFrame(m_source_buffer[ready_buffer][idx]);
 
-                if (is_validated)
+                if (total_elements)
                 {
                     // реєстрація блоків даних
-                    m_data_source_recorder->putNewFrame(m_buffer[m_flt_ready_buffer]);
+                    m_data_source_recorder->putNewFrame(m_buffer[m_flt_ready_buffer], total_elements);
                 }
             }
 
@@ -85,9 +80,11 @@ void DataSourceFrameProcessor::frameProcess()
     }
 }
 
-bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer)
+int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
+
+    uint32_t total_elements = buffer->payloadSize() / sizeof(float);
 
     frame * frm = buffer->frame();
     char * buf  = buffer->payload();
@@ -133,41 +130,53 @@ bool DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInt
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
         {
             std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(buf);
-            for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
+
+            total_elements = buffer->payloadSize() / sizeof(std::uint8_t);
+
+            for (std::uint32_t i = 0; i < total_elements; ++i)
             {
-                cur_buf->payload()[i] = validateFloat(static_cast<float>(payload[i]));
+                cur_buf->payload()[i] = static_cast<float>(payload[i]);
             }
         }
         break;
+
         case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
         {
             std::int16_t * payload = reinterpret_cast<std::int16_t *>(buf);
-            for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
+
+            total_elements = buffer->payloadSize() / sizeof(std::int16_t);
+
+            for (std::uint32_t i = 0; i < total_elements; ++i)
             {
-                cur_buf->payload()[i] = validateFloat(static_cast<float>(payload[i]));
+                cur_buf->payload()[i] = (static_cast<float>(payload[i]));
             }
         }
         break;
+
         case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
         {
             std::int32_t * payload = reinterpret_cast<std::int32_t *>(buf);
-            for (std::uint32_t i = 0; i < cur_buf->totalElements(); ++i)
+
+            total_elements = buffer->payloadSize() / sizeof(std::int32_t);
+
+            for (std::uint32_t i = 0; i < total_elements; ++i)
             {
-                cur_buf->payload()[i] = validateFloat(static_cast<float>(payload[i]));
+                cur_buf->payload()[i] = (static_cast<float>(payload[i]));
             }
         }
         break;
+
         default:
             break;
         }
 
-        return true;
+        return total_elements;
     }
 
     // перекладемо дані якшо вони вже в форматі float
     std::copy(buf, buf + cur_buf->payloadSize(), cur_buf->payload());
 
-    return true;
+    return total_elements;
 }
 
 void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)

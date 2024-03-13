@@ -78,7 +78,7 @@ static constexpr double FRAME_RATE {1000. / 200.}; // 200 Hz = 5ms
 
 // К-сть буферів під читання/обробку.
 // Можливо краще задавати в зовн. наоаштуваннях.
-static constexpr std::size_t MAX_PROCESSING_BUF_NUM {8};
+static constexpr std::size_t MAX_PROCESSING_BUF_NUM {10};
 
 // тип даних payload_type може бути:
 enum class PAYLOAD_TYPE : char

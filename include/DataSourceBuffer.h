@@ -7,6 +7,8 @@
 
 namespace DATA_SOURCE_TASK
 {
+
+/// \brief Клас верхньої абстракції кадру з джерела.
 class DataSourceBufferInterface
 {
 public:
@@ -152,6 +154,7 @@ protected:
     char * m_payload;                 // вказівник на дані оцифрованих відліків
 };
 
+// Простий алокатор
 template<typename T>
 class DataSourceBuffer : public DataSourceBufferInterface
 {
