@@ -12,6 +12,7 @@ static std::atomic<bool> is_process_active {true};
 DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     m_frame_size {frame_size},
     m_packets_loss {0},
+    m_stream_broken{0},
     m_bad_frames {0},
     m_can_validate {false},
     m_src_ready_buffer {-1},
@@ -87,7 +88,7 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
-    uint32_t total_elements = buffer->payloadSize() / sizeof(float);
+    uint32_t total_elements = buffer->payloadSize() / FLOAT_SIZE;
 
     frame * frm = buffer->frame();
     char * buf  = buffer->payload();
@@ -135,7 +136,7 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
         {
             std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(buf);
 
-            total_elements = buffer->payloadSize() / sizeof(std::uint8_t);
+            total_elements = buffer->payloadSize() / UINT8_SIZE;
 
             for (std::uint32_t i = 0; i < total_elements; ++i)
             {
@@ -148,7 +149,7 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
         {
             std::int16_t * payload = reinterpret_cast<std::int16_t *>(buf);
 
-            total_elements = buffer->payloadSize() / sizeof(std::int16_t);
+            total_elements = buffer->payloadSize() / INT16_SIZE;
 
             for (std::uint32_t i = 0; i < total_elements; ++i)
             {
@@ -161,7 +162,7 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
         {
             std::int32_t * payload = reinterpret_cast<std::int32_t *>(buf);
 
-            total_elements = buffer->payloadSize() / sizeof(std::int32_t);
+            total_elements = buffer->payloadSize() / INT32_SIZE;
 
             for (std::uint32_t i = 0; i < total_elements; ++i)
             {
@@ -183,7 +184,7 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
     return total_elements;
 }
 
-void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size)
+void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInterface> & frame, const int & updated_size)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
@@ -205,13 +206,48 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
     // Новий кадр для масиву даних
     ++m_src_ready_buffer;
 
+    PAYLOAD_TYPE p_type = frame->frame()->payload_type;
+
     // Обміняємо кадр для обробки
-    m_source_buffer[m_active_buffer][m_src_ready_buffer].swap(buffer);
+    m_source_buffer[m_active_buffer][m_src_ready_buffer].swap(frame);
 
     // розмір не відповідає необхідному.
     if (updated_size != frameSize())
     {
         ++m_bad_frames;
+    }
+
+    // перевірка цілісності даних. розмір даних має бути кратним типу даних
+    if (updated_size > static_cast<int>(FRAME_HEADER_SIZE))
+    {
+        int recieved_payload_size = updated_size - FRAME_HEADER_SIZE;
+        int payload_size          = 1;
+
+        switch (p_type)
+        {
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
+            return;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
+            payload_size = INT16_SIZE;
+            break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
+            payload_size = INT32_SIZE;
+            break;
+        case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
+            payload_size = FLOAT_SIZE;
+            break;
+        default:
+            break;
+        }
+
+        if (recieved_payload_size % payload_size != 0)
+        {
+            ++m_stream_broken;
+        }
+    }
+    else
+    {
+        ++m_stream_broken;
     }
 }
 

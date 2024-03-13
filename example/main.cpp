@@ -42,6 +42,7 @@ int main(int argc, char ** argv)
 
         // Таймер оновлення виводу в консоль
         DATA_SOURCE_TASK::Timer display_update_timer;
+
         // Вивід результатів в консоль
         for (;;)
         {
@@ -72,6 +73,8 @@ int main(int argc, char ** argv)
             std::cout << "Bad frames: " << data_source_processor->getBadFrames() << std::endl;
             std::cout << "-----------------------------------------------"<< std::endl;
             std::cout << "Frames loss: " << data_source_processor->getPacketsLoss() << std::endl;
+            std::cout << "-----------------------------------------------"<< std::endl;
+            std::cout << "Broken stream frames: " << data_source_processor->getBrokenFrames() << std::endl;
             std::cout << "-----------------------------------------------"<< std::endl;
             std::cout << "Percentage loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %" << std::endl;
             std::cout << "-----------------------------------------------"<< std::endl;

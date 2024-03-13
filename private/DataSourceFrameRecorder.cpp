@@ -63,7 +63,7 @@ void DataSourceFrameRecorder::recordBlock()
             continue;
 
         char * wbuf  = reinterpret_cast<char *>(m_record_buffer.data());
-        int buz_size = m_record_buffer.size()  * sizeof(float);
+        int buz_size = m_record_buffer.size()  * FLOAT_SIZE;
 
         source_file.write(wbuf, buz_size);
 
@@ -97,8 +97,7 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
     std::lock_guard<std::mutex> lock(m_buf_lock);
 
     // Реальний розмір оброблених даних
-    static constexpr std::size_t FL_SIZE {sizeof(float)};
-    std::size_t av_in_data = total_elements * FL_SIZE;
+    std::size_t av_in_data = total_elements * FLOAT_SIZE;
 
     // Заповнимо масиви під запис
     for (std::uint8_t i = 0; i < MAX_REC_BUF_NUM; ++i)

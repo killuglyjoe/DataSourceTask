@@ -46,10 +46,13 @@ public:
     /// Рахуються по результату методу read, якщо розмір прочитаних даних менше бажаного.
     /// \return
     inline int getBadFrames() const { return m_bad_frames; }
+    /// \brief К-сть кадрів з проблемами цілісності даних.
+    /// \return
+    inline int getBrokenFrames() const { return m_stream_broken; }
     /// \brief Функція записує вх. кадр в масив буферів кадрів.
-    /// \param buffer
+    /// \param frame
     /// \param updated_size
-    void putNewFrame(std::shared_ptr<DataSourceBufferInterface> & buffer, const int & updated_size);
+    void putNewFrame(std::shared_ptr<DataSourceBufferInterface> & frame, const int & updated_size);
     /// \brief Пройдений час на обробки вх. даних в потоці.
     /// \return мілісекунди
     inline double elapsed() { return m_elapsed; }
@@ -67,20 +70,21 @@ private:
     void convertToFLoat(char * payload);
 
 private:
-    int m_frame_size   = 0; // відомий розмір кадру
-    int m_packets_loss = 0; // втрати пакетів на основі лфчильника кадрів
-    int m_bad_frames = 0; // поганий пакет на основі повернутого розміру кадру
+    int m_frame_size    = 0; // відомий розмір кадру
+    int m_packets_loss  = 0; // втрати пакетів на основі лфчильника кадрів
+    int m_stream_broken = 0; // потік даних не цілісний. Не вистачає байтів для даних.
+    int m_bad_frames    = 0; // поганий пакет на основі повернутого розміру кадру
 
-    double m_elapsed = 0; // час обробки вх. даних, мс
+    double m_elapsed = 0;   // час обробки вх. даних, мс
 
-    std::mutex m_process_mutex;
+    mutable std::mutex m_process_mutex;
 
     std::atomic<bool> m_can_validate;
     std::atomic<int> m_req_size;
 
     // --------------   Дані з джерела   --------------------
-    std::atomic<int> m_src_ready_buffer; // 0..MAX_PROCESSING_BUF_NUM-1
-    std::atomic<int> m_active_buffer;    // 0 або 1
+    std::atomic<int> m_src_ready_buffer; // 0...MAX_PROCESSING_BUF_NUM-1
+    std::atomic<int> m_active_buffer;    // 0...BUFERIZATION_NUM-1
 
     // Два буфери - один наповнюємо з іншим працюємо. Потім навпаки
     std::shared_ptr<DataSourceBufferInterface> m_source_buffer[BUFERIZATION_NUM]

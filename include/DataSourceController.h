@@ -39,6 +39,9 @@ public:
     /// Рахуються по результату методу read, якщо розмір прочитаних даних менше бажаного.
     /// \return
     inline int getBadFrames() const { return m_data_source_frm_processor->getBadFrames(); }
+    /// \brief К-сть кадрів з проблемами цілісності даних.
+    /// \return
+    inline int getBrokenFrames() const { return m_data_source_frm_processor->getBrokenFrames(); }
     /// \brief Поточний лічильник кадрів
     /// \return
     inline int framesTotal() { return m_buffer->frameCounter(); }

@@ -26,6 +26,8 @@ public:
         // Record the start time
         QueryPerformanceCounter(&m_start);
     }
+    /// \brief Пройдений час в мілісекундах
+    /// \return
     double elapsed()
     {
         LARGE_INTEGER end;
@@ -83,21 +85,21 @@ static constexpr std::size_t MAX_PROCESSING_BUF_NUM {10};
 // тип даних payload_type може бути:
 enum class PAYLOAD_TYPE : char
 {
-    PAYLOAD_TYPE_8_BIT_UINT        = 0u, //  8 bit unsigned int;
-    PAYLOAD_TYPE_16_BIT_INT        = 1u, //  16 bit signed int;
-    PAYLOAD_TYPE_32_BIT_INT        = 2u, //  32 bit signed int;
-    PAYLOAD_TYPE_32_BIT_IEEE_FLOAT = 3u, //  32 bit IEEE 754 float;
-    PAYLOAD_TYPE_UNSUPPORTED       = 4u,
-    PAYLOAD_TYPE_SIZE              = 5u
+    PAYLOAD_TYPE_8_BIT_UINT = 0u,   //  8 bit unsigned int;
+    PAYLOAD_TYPE_16_BIT_INT,        //  16 bit signed int;
+    PAYLOAD_TYPE_32_BIT_INT,        //  32 bit signed int;
+    PAYLOAD_TYPE_32_BIT_IEEE_FLOAT, //  32 bit IEEE 754 float;
+    PAYLOAD_TYPE_UNSUPPORTED,
+    PAYLOAD_TYPE_SIZE
 };
 
 // припускаємо шо можуть бути наступні типи джерел
 enum class SOURCE_TYPE : char
 {
-    SOURCE_TYPE_FILE      = 0u,
-    SOURCE_TYPE_EMULATOR  = 1u,
-    SOURCE_TYPE_UNDEFINED = 2u,
-    SOURCE_TYPE_SIZE      = 2u
+    SOURCE_TYPE_FILE = 0u,
+    SOURCE_TYPE_EMULATOR,
+    SOURCE_TYPE_UNDEFINED,
+    SOURCE_TYPE_SIZE
 };
 
 enum class DATA_SOURCE_ERROR : int
@@ -118,6 +120,11 @@ struct frame
 };
 
 static constexpr std::uint32_t FRAME_HEADER_SIZE {sizeof(struct frame) - sizeof(void *)};
+
+static constexpr int UINT8_SIZE {sizeof(std::uint8_t)};
+static constexpr int INT16_SIZE {sizeof(std::int16_t)};
+static constexpr int INT32_SIZE {sizeof(std::int32_t)};
+static constexpr int FLOAT_SIZE {sizeof(float)};
 
 } // namespace DATA_SOURCE_TASK
 
