@@ -38,7 +38,7 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
     }
 
     // Дані для запису в файл
-    m_record_buffer.record_buffer.resize(m_buffer_size);
+    m_record_buffer.resize(m_buffer_size);
 
     // асинхронний потік запису в файл
     record_to_file = std::thread(&DataSourceFrameRecorder::recordBlock, this);
@@ -62,8 +62,8 @@ void DataSourceFrameRecorder::recordBlock()
         if (!source_file)
             continue;
 
-        char * wbuf  = reinterpret_cast<char *>(m_record_buffer.record_buffer.data());
-        int buz_size = (m_record_buffer.record_buffer.size() - m_record_buffer.total_elements)  * sizeof(float);
+        char * wbuf  = reinterpret_cast<char *>(m_record_buffer.data());
+        int buz_size = m_record_buffer.size()  * sizeof(float);
 
         source_file.write(wbuf, buz_size);
 
@@ -96,12 +96,13 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
 {
     std::lock_guard<std::mutex> lock(m_buf_lock);
 
-    std::size_t av_in_data = frame->payloadSize();
+    // Реальний розмір оброблених даних
+    std::size_t av_in_data = total_elements * sizeof(float);
 
+    // Заповнимо масиви під запис
     for (std::uint8_t i = 0; i < MAX_REC_BUF_NUM; ++i)
     {
         struct record_buffer * buf = &m_frame_record[i];
-        buf->total_elements        = total_elements;
 
         // перевіримо чи буфер не повний і чи є що записати ще
         if (!buf->is_full && av_in_data > 0)
@@ -127,8 +128,7 @@ void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float
             if (buf->is_full)
             {
                 // Обміняємо буфери для запису
-                m_record_buffer.record_buffer.swap(buf->record_buffer);
-                m_record_buffer.total_elements = total_elements;
+                m_record_buffer.swap(buf->record_buffer);
 
                 // дозволяємо запис в файл
                 m_need_record = true;

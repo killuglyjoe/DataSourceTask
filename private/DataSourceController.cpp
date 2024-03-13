@@ -40,9 +40,10 @@ DataSourceController::DataSourceController(
     }
     catch (const std::exception & e)
     {
-        std::runtime_error(e.what()); // треба використовувати власні обгортки над стандартнимим виключеннями
+        std::runtime_error(e.what());
     }
 
+    // Обробка кадрів - перетворенн в float, складання, запис
     m_data_source_frm_processor = std::make_unique<DataSourceFrameProcessor>(frame_size);
 
     // - організувати зчитування даних в окремому потоці;

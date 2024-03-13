@@ -30,12 +30,14 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     const int max_total_elements = m_source_buffer[0][0]->totalElements();
     const int float_frame_size = FRAME_HEADER_SIZE + max_total_elements * sizeof(float);
 
-    // float буфери
+    // float буфери. К-сть елементів максимальна,
+    // тому будемо повертати реальну к-сть оброблених відліків з джерела.
     for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; i++)
     {
         m_buffer.push_back(std::make_shared<DataSourceBuffer<float>>(float_frame_size));
     }
 
+    // Реєстратор відліків блоками відліків, к-сть яких є число степеня 2.
     m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", max_total_elements);
 
     process_thread = std::thread(&DataSourceFrameProcessor::frameProcess, this);
@@ -55,7 +57,8 @@ void DataSourceFrameProcessor::frameProcess()
 
             for (std::size_t idx = 0; idx < MAX_PROCESSING_BUF_NUM; ++idx)
             {
-                int total_elements = 0;
+                static int total_elements;
+                total_elements = 0;
 
                 // поточний буфер оновлюється, тому беремо попередній.
                 int ready_buffer = m_active_buffer - 1;
@@ -101,19 +104,20 @@ int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInte
         // лічільник кадрів
         const int delta = frm->frame_counter - cur_frm_counter;
 
-        if (delta > 1)
+        if ((delta > 1) && (delta < UINT16_MAX))
         {
             m_packets_loss += frm->frame_counter - cur_frm_counter - 1;
         }
     }
 
+    // Запам'ятовуємо лічильник.
     cur_frm_counter = frm->frame_counter;
 
     // сформуємо float масиви
     if (m_flt_ready_buffer >= static_cast<int>(MAX_PROCESSING_BUF_NUM) - 1)
         m_flt_ready_buffer = -1;
 
-    // Готовий буфер для запису
+    // Поточний кадр для перетворення в float
     ++m_flt_ready_buffer;
 
     DataSourceBuffer<float> * cur_buf = m_buffer[m_flt_ready_buffer].get();
@@ -183,6 +187,7 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 
+    // Заповнюємо буфери з масивами кадрів
     if (m_src_ready_buffer >= static_cast<int>(MAX_PROCESSING_BUF_NUM) - 1)
     {
         m_src_ready_buffer = -1;
@@ -193,16 +198,17 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
         if (m_active_buffer >= BUFERIZATION_NUM)
             m_active_buffer = 0;
 
+        // сигналізуємо про готовність масивів даних для обробки
         m_can_validate = true;
     }
 
-    // Готовий буфер для запису
+    // Новий кадр для масиву даних
     ++m_src_ready_buffer;
 
-    // Обміняємо буфери для обробки
+    // Обміняємо кадр для обробки
     m_source_buffer[m_active_buffer][m_src_ready_buffer].swap(buffer);
 
-    // розмір не відповідає необхідному
+    // розмір не відповідає необхідному.
     if (updated_size != frameSize())
     {
         ++m_bad_frames;
