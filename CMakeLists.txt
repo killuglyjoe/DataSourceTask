@@ -4,28 +4,6 @@ cmake_minimum_required(VERSION 3.6.2)
 # VERSION variables policy
 cmake_policy(SET CMP0048 NEW)
 
-find_program(CMAKE_C_COMPILER NAMES gcc)
-find_program(CMAKE_CXX_COMPILER NAMES g++)
-
-if (CMAKE_SYSTEM_NAME STREQUAL Windows)
-
-    find_program(CMAKE_AR NAMES ar)
-    find_program(CMAKE_RANLIB NAMES ranlib)
-    find_program(CMAKE_MAKE_PROGRAM NAMES mingw32-make)
-
-    # which compilers to use for C++
-    set(CMAKE_CXX_COMPILER g++.exe)
-
-    # adjust the default behavior of the FIND_XXX() commands:
-    # search programs in the host environment
-    set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-
-    # search headers and libraries in the target environment
-    set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-    set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-endif()
-
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
 project("DataSourec test task" LANGUAGES CXX)
