@@ -91,7 +91,7 @@ void DataSourceFrameRecorder::recordBlock()
     }
 }
 
-void DataSourceFrameRecorder::putNewFrame(std::shared_ptr<DataSourceBuffer<float>> & frame,
+void DataSourceFrameRecorder::putNewFrame(const std::shared_ptr<DataSourceBuffer<float>> & frame,
                                           const int & total_elements)
 {
     std::lock_guard<std::mutex> lock(m_buf_lock);

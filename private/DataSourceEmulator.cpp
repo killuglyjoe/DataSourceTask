@@ -138,14 +138,14 @@ void DataSourceFileEmulator::updateBufs()
 
 int DataSourceFileEmulator::read(char * data, int size)
 {
+    std::lock_guard<std::mutex> lock(m_read_lock);
+
     int ret_size = size;
 
     static Timer overall_timer; // між оновленням даних
     static Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 
     static double elapsed = 0.;
-
-    std::lock_guard<std::mutex> lock(m_read_lock);
 
     overall_timer.reset();
     diff_timer.reset();
@@ -157,7 +157,8 @@ int DataSourceFileEmulator::read(char * data, int size)
     static int b = 0;
     if (b < 10)
     {
-        // - результат DataSource::read() непередбачуваний, близький до реальної ситуації, може варіюватись у межах 0..size;
+        // - результат DataSource::read() непередбачуваний,
+        // близький до реальної ситуації, може варіюватись у межах 0..size;
         ret_size = size / 2;
         ++b;
     }

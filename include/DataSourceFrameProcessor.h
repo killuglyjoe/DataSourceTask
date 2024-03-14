@@ -35,7 +35,7 @@ public:
     /// Конвертація в float.
     /// \param buffer - дані з джерела
     /// \return - к-сть rjydthnjdfyb[ відліків float
-    int validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer);
+    int validateFrame(const std::shared_ptr<DataSourceBufferInterface> & buffer);
     /// \brief Розмір кадру
     /// \return
     inline int frameSize() const { return m_frame_size; }

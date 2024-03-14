@@ -58,9 +58,11 @@ void DataSourceController::readData()
     static int ret_size = static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
     static std::atomic<double> elapsed;
 
+    static Timer timer;
+
     while (is_read_active)
     {
-        Timer timer;
+        timer.reset();
         elapsed = 0;
 
         // - браковані кадри заповнювати нулями
@@ -69,7 +71,7 @@ void DataSourceController::readData()
         // читаємо з джерела
         ret_size = m_data_source->read(m_buffer->data(), m_buffer->size());
 
-        if (ret_size != static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR))
+        if (ret_size > 0)
         {
             // обробка даних
             m_data_source_frm_processor->putNewFrame(m_buffer, ret_size);

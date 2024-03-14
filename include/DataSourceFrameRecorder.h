@@ -42,7 +42,7 @@ public:
     /// Розмір вхідних даних менше ніж виділено під запис.
     /// \param buffer - оброблені дані float
     /// \param total_elements - к-сть відліків float
-    void putNewFrame(std::shared_ptr<DataSourceBuffer<float>> & buffer, const int &total_elements);
+    void putNewFrame(const std::shared_ptr<DataSourceBuffer<float>> & buffer, const int & total_elements);
 
     /// \brief Замір часу на запис в файл.
     /// \return

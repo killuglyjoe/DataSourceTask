@@ -1,6 +1,5 @@
 #include "DataSourceFrameProcessor.h"
 
-#include <cmath>
 #include <thread>
 
 namespace DATA_SOURCE_TASK
@@ -44,7 +43,13 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     process_thread = std::thread(&DataSourceFrameProcessor::frameProcess, this);
 }
 
-DataSourceFrameProcessor::~DataSourceFrameProcessor() { is_process_active = false; }
+DataSourceFrameProcessor::~DataSourceFrameProcessor()
+{
+    is_process_active = false;
+
+    if (process_thread.joinable())
+        process_thread.join();
+}
 
 void DataSourceFrameProcessor::frameProcess()
 {
@@ -84,7 +89,7 @@ void DataSourceFrameProcessor::frameProcess()
     }
 }
 
-int DataSourceFrameProcessor::validateFrame(std::shared_ptr<DataSourceBufferInterface> & buffer)
+int DataSourceFrameProcessor::validateFrame(const std::shared_ptr<DataSourceBufferInterface> & buffer)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
 

@@ -5,15 +5,15 @@
 
 static constexpr const char * FILE_SOURCE = "dev";
 
-// 10 МБ/с = 10×1024×1024 байт/с - мінімальна пропускна здатність
-// 100 МБ/с = 100×1024×1024 байт/с - максимальна пропускна здатність
+// 10 МБ/с = 1250000 байт/с - мінімальна пропускна здатність
+// 100 МБ/с = 12500000 байт/с - максимальна пропускна здатність
 // 200 Гц - частота видачі кадрів
 
-// Максимальний розмір кадру = (100×1024×1024) / 200 = 512 * 1024 Байт
-static constexpr int MAX_FRAME_SIZE {512 * 1024};
+// Максимальний розмір кадру = (100 000 000 / 8) / 200 = 62 500 Байт
+static constexpr int MAX_FRAME_SIZE {static_cast<int>((12500000) / (1000 / DATA_SOURCE_TASK::FRAME_RATE))};  // 62 500
 
 // Мінімальний розмір кадру = (10×1024×1024) / 200 = 51 * 1024 Байт
-static constexpr int MIN_FRAME_SIZE {51 * 1024};
+static constexpr int MIN_FRAME_SIZE  {static_cast<int>((1250000) / (1000 / DATA_SOURCE_TASK::FRAME_RATE))};
 
 #ifdef _WIN32
 // For Windows
@@ -28,7 +28,7 @@ int main(int argc, char ** argv)
     static_cast<void>(argc);
     static_cast<void>(argv);
 
-    // Тип джерела.
+    // Плагін для роботи з джерелом.
     constexpr DATA_SOURCE_TASK::SOURCE_TYPE s_type {DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_EMULATOR};
 
     // Тип вх. даних.
@@ -80,7 +80,8 @@ int main(int argc, char ** argv)
             std::cout << "-----------------------------------------------"<< std::endl;
 
             // Груба частота кадрів, Мб/сек
-            std::cout << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) / (1000. * 1000.) << " Mb/sec" << std::endl;
+            static constexpr float byte_sec_2_bit_sec_conv {8. / (1000. * 1000.)};
+            std::cout << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) * byte_sec_2_bit_sec_conv << " Mb/sec" << std::endl;
             std::cout << "-----------------------------------------------"<< std::endl;
 
             // Час перетворення на float
