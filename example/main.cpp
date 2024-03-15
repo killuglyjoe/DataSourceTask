@@ -1,19 +1,22 @@
 #include "DataSourceController.h"
+#include "DataSourceEmulator.h"
+#include "DataSourceFile.h"
 
 #include <iostream>
 #include <ostream>
 
 static constexpr const char * FILE_SOURCE = "dev";
+static constexpr const char * FILE_RECORD = "record";
 
 // 10 МБ/с = 1250000 байт/с - мінімальна пропускна здатність
 // 100 МБ/с = 12500000 байт/с - максимальна пропускна здатність
 // 200 Гц - частота видачі кадрів
 
 // Максимальний розмір кадру = (100 000 000 / 8) / 200 = 62 500 Байт
-static constexpr int MAX_FRAME_SIZE {static_cast<int>((12500000) / (1000 / DATA_SOURCE_TASK::FRAME_RATE))};  // 62 500
+static constexpr int MAX_FRAME_SIZE {static_cast<int>((12500000) / DATA_SOURCE_TASK::FRAME_RATE_PER_SEC)};
 
 // Мінімальний розмір кадру = (10×1024×1024) / 200 = 51 * 1024 Байт
-static constexpr int MIN_FRAME_SIZE  {static_cast<int>((1250000) / (1000 / DATA_SOURCE_TASK::FRAME_RATE))};
+static constexpr int MIN_FRAME_SIZE {static_cast<int>((1250000) / DATA_SOURCE_TASK::FRAME_RATE_PER_SEC)};
 
 #ifdef _WIN32
 // For Windows
@@ -34,11 +37,26 @@ int main(int argc, char ** argv)
     // Тип вх. даних.
     constexpr DATA_SOURCE_TASK::PAYLOAD_TYPE p_type {DATA_SOURCE_TASK::PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT};
 
+    std::shared_ptr<DATA_SOURCE_TASK::DataSource> data_source;
     try
     {
+        // Створимо джерело даних
+        switch (s_type)
+        {
+        case DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_FILE:
+            data_source = std::make_shared<DATA_SOURCE_TASK::DataSourceFile>(FILE_RECORD);
+            break;
+
+        case DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_EMULATOR:
+            data_source = std::make_unique<DATA_SOURCE_TASK::DataSourceFileEmulator>(s_type, p_type, MAX_FRAME_SIZE);
+            break;
+        default:
+            break;
+        }
+
         // Клас контролер для різних типів даних з різних джерел.
         std::unique_ptr<DATA_SOURCE_TASK::DataSourceController> data_source_processor
-            = std::make_unique<DATA_SOURCE_TASK::DataSourceController>(FILE_SOURCE, s_type, p_type, MAX_FRAME_SIZE);
+            = std::make_unique<DATA_SOURCE_TASK::DataSourceController>(data_source, MAX_FRAME_SIZE);
 
         // Таймер оновлення виводу в консоль
         DATA_SOURCE_TASK::Timer display_update_timer;

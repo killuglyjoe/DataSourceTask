@@ -21,11 +21,7 @@ public:
     /// \param source_path - безпосередньо походження джерела (шлях до файлу, мережева адреса тощо). Може треба
     /// параметризувати цей параметр \param source_type - тип джереала \param p_type - тип корисних даних \param
     /// frame_size - к-сть елементів в payload
-    DataSourceController(
-        const std::string & source_path,
-        const SOURCE_TYPE & source_type,
-        const PAYLOAD_TYPE & p_type,
-        const std::uint32_t & frame_size);
+    DataSourceController(const std::shared_ptr<DataSource> & data_source, const std::uint32_t & frame_size);
 
     virtual ~DataSourceController();
 
@@ -65,7 +61,11 @@ protected:
 private:
     std::atomic<int> m_elapsed; // час читання з джерела, мс
 
-    std::unique_ptr<DataSource> m_data_source;                              // клас джерела даних
+    std::atomic<bool> m_is_read_active;
+
+    std::thread m_read_thread;
+
+    std::shared_ptr<DATA_SOURCE_TASK::DataSource> m_data_source;
     std::unique_ptr<DataSourceFrameProcessor> m_data_source_frm_processor;  // клас для обробки даних
     std::shared_ptr<DataSourceBufferInterface> m_buffer;                    // масиви для зберішання вх. даних
 

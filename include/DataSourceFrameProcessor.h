@@ -82,6 +82,9 @@ private:
     std::atomic<bool> m_can_validate;
     std::atomic<int> m_req_size;
 
+    std::thread m_process_thread;
+    std::atomic<bool> m_is_process_active;
+
     // --------------   Дані з джерела   --------------------
     std::atomic<int> m_src_ready_buffer; // 0...MAX_PROCESSING_BUF_NUM-1
     std::atomic<int> m_active_buffer;    // 0...BUFERIZATION_NUM-1

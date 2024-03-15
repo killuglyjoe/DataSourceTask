@@ -57,7 +57,8 @@ private:
     std::uint32_t m_buffer_size        = 0; // к-сть відліків степепня числа 2
     std::string m_record_name          = "record"; // ім'я файлу.
 
-    std::thread record_to_file;
+    mutable std::atomic<bool> m_is_can_record_active; // Активатор потоку запису
+    std::thread m_record_to_file;
     double m_elapsed = 0.;
 
     std::mutex m_buf_lock;

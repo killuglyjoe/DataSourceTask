@@ -1,12 +1,10 @@
 #include "DataSourceFrameProcessor.h"
 
-#include <thread>
+#include <iostream>
+#include <ostream>
 
 namespace DATA_SOURCE_TASK
 {
-
-std::thread process_thread;
-static std::atomic<bool> is_process_active {true};
 
 DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     m_frame_size {frame_size},
@@ -18,6 +16,8 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     m_active_buffer {0},
     m_flt_ready_buffer {-1}
 {
+    static Timer timer;
+
     // виділимо данні
     for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
     {
@@ -40,22 +40,24 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     // Реєстратор відліків блоками відліків, к-сть яких є число степеня 2.
     m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", max_total_elements);
 
-    process_thread = std::thread(&DataSourceFrameProcessor::frameProcess, this);
+    std::cout << timer.elapsed() << std::endl;
+    m_is_process_active = true;
+    m_process_thread = std::thread(&DataSourceFrameProcessor::frameProcess, this);
 }
 
 DataSourceFrameProcessor::~DataSourceFrameProcessor()
 {
-    is_process_active = false;
+    m_is_process_active = false;
 
-    if (process_thread.joinable())
-        process_thread.join();
+    if (m_process_thread.joinable())
+        m_process_thread.join();
 }
 
 void DataSourceFrameProcessor::frameProcess()
 {
     static Timer timer;
 
-    while (is_process_active)
+    while (m_is_process_active)
     {
         if (m_can_validate)
         {

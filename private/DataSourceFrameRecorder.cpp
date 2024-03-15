@@ -18,15 +18,12 @@ size_t nearestPowerOfTwo(const size_t & n)
     return static_cast<size_t>(std::pow(2, std::ceil(std::log2(n))));
 }
 
-// Активатор потоку запису
-static std::atomic<bool> is_can_record_active;
-
 DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name,
                                                  const int & num_elements):
     m_record_name {record_name},
     m_need_record {false}
 {
-    m_buffer_size = nearestPowerOfTwo(num_elements);
+    m_buffer_size = nearestPowerOfTwo(num_elements*4);
 
     // Буфери для запису розміром кратним степеня двійки
     for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)
@@ -41,14 +38,14 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
     m_record_buffer.resize(m_buffer_size);
 
     // асинхронний потік запису в файл
-    record_to_file = std::thread(&DataSourceFrameRecorder::recordBlock, this);
+    m_record_to_file = std::thread(&DataSourceFrameRecorder::recordBlock, this);
 }
 
 void DataSourceFrameRecorder::recordBlock()
 {
-    is_can_record_active = true;
+    m_is_can_record_active = true;
 
-    while (is_can_record_active)
+    while (m_is_can_record_active)
     {
         if (!m_need_record)
             continue;
@@ -63,7 +60,7 @@ void DataSourceFrameRecorder::recordBlock()
             continue;
 
         char * wbuf  = reinterpret_cast<char *>(m_record_buffer.data());
-        int buz_size = m_record_buffer.size()  * FLOAT_SIZE;
+        static int buz_size = m_record_buffer.size()  * FLOAT_SIZE;
 
         source_file.write(wbuf, buz_size);
 
