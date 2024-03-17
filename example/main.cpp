@@ -37,7 +37,6 @@ int main(int argc, char ** argv)
     std::shared_ptr<DATA_SOURCE_TASK::DataSource> data_source;
     try
     {
-
         data_source = std::make_unique<DATA_SOURCE_TASK::DataSourceFileEmulator>(p_type, MAX_FRAME_SIZE);
 
         // Клас контролер для різних типів даних з різних джерел.
@@ -60,7 +59,8 @@ int main(int argc, char ** argv)
 
             int diff_frames = data_source_processor->framesTotal() - (prev_counter == -1 ? 0 : prev_counter);
 
-            std::stringstream ss;
+            static std::stringstream ss;
+            ss.clear();
 
             ss << "Frame size: " << MAX_FRAME_SIZE << " bytes\n";
             ss << "-----------------------------------------------\n";
@@ -69,7 +69,7 @@ int main(int argc, char ** argv)
             ss << "Elapsed time for frame read: " << data_source_processor->elapsed() << " ms\n";
             ss << "-----------------------------------------------\n";
 
-                   // Заголовок, к-сть обробленних кадрів, к-сть втрачених і відсоток втрачених кадрів за ~1сек
+            // Заголовок, к-сть обробленних кадрів, к-сть втрачених і відсоток втрачених кадрів за ~1сек
             ss << "Frame head: " << std::hex << data_source_processor->header() << std::dec << "\n";
             ss << "-----------------------------------------------\n";
             ss << "Frames recieved: " << data_source_processor->framesTotal() << "\n";
@@ -85,12 +85,12 @@ int main(int argc, char ** argv)
             ss << "Percentage loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %\n";
             ss << "-----------------------------------------------\n";
 
-                   // Груба частота кадрів, Мб/сек
+            // Груба частота кадрів, Мб/сек
             static constexpr float byte_sec_2_bit_sec_conv {8. / (1000. * 1000.)};
             ss << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) * byte_sec_2_bit_sec_conv << " Mb/sec\n";
             ss << "-----------------------------------------------\n";
 
-                   // Час перетворення на float
+            // Час перетворення на float
             ss << "Elapsed time for frame validation: " << data_source_processor->frameValidationElapsed() << " ms\n";
             ss << "-----------------------------------------------\n";
             // Час запису в файл
