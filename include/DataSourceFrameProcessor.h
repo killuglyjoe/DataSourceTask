@@ -4,10 +4,10 @@
 #include "DataSourceBuffer.h"
 #include "DataSourceFrameRecorder.h"
 
-#include <list>
 #include <memory>
 #include <mutex>
 #include <atomic>
+#include <unordered_map>
 
 namespace DATA_SOURCE_TASK
 {
@@ -98,14 +98,8 @@ private:
     std::atomic<int> m_flt_ready_buffer;                            // 0..MAX_PROCESSING_BUF_NUM-1
     std::vector<std::shared_ptr<DataSourceBuffer<float>>> m_buffer; // дані будуть перетворені в float
 
-    struct source_recorder
-    {
-        int source_id;                                     // ІД джерела кадру
-        std::shared_ptr<DataSourceFrameRecorder> recorder; // клас для запису оброблених даних в файл.
-    };
-
     // Реєстратор відліків блоками відліків, к-сть яких є число степеня 2.
-    std::list<source_recorder> m_data_source_frame_recorders;
+    std::unordered_map<int, std::shared_ptr<DataSourceFrameRecorder> > m_data_source_frame_recorders;
 };
 
 } // namespace DATA_SOURCE_TASK

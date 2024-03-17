@@ -1,6 +1,4 @@
 #include "DataSourceFrameProcessor.h"
-#include <iostream>
-#include <ostream>
 
 namespace DATA_SOURCE_TASK
 {
@@ -79,10 +77,10 @@ void DataSourceFrameProcessor::frameProcess()
                     bool is_found = false;
                     for (auto & recorder : m_data_source_frame_recorders)
                     {
-                        if (recorder.source_id == source_id)
+                        if (recorder.first == source_id)
                         {
                             // реєстрація блоків даних
-                            recorder.recorder->putNewFrame(m_buffer[m_flt_ready_buffer], total_elements);
+                            recorder.second->putNewFrame(m_buffer[m_flt_ready_buffer], total_elements);
                             is_found = true;
                         }
                     }
@@ -90,8 +88,8 @@ void DataSourceFrameProcessor::frameProcess()
                     if (!is_found)
                     {
                         // Треба заміряти пам'ять, треба знати коли зупинитись
-                        m_data_source_frame_recorders.push_back(
-                            {source_id, std::make_shared<DataSourceFrameRecorder>("record_" + std::to_string(source_id), total_elements)});
+                        m_data_source_frame_recorders[source_id] = std::make_shared<DataSourceFrameRecorder>(
+                            "record_" + std::to_string(source_id), total_elements);
                     }
                 }
             }
@@ -279,9 +277,9 @@ double DataSourceFrameProcessor::saveFrameElapsed()
 
     average_elapsed = 0;
 
-    for (auto & recorder : m_data_source_frame_recorders)
+    for (const auto & recorder : m_data_source_frame_recorders)
     {
-        average_elapsed += recorder.recorder->elapsed();
+        average_elapsed += recorder.second->elapsed();
     }
 
     int num_toatal = m_data_source_frame_recorders.size();
