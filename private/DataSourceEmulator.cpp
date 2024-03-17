@@ -13,10 +13,9 @@ float randMinToMax(const float & min, const float & max)
     return min + (rand() / (RAND_MAX / (max - min)));
 }
 
-DataSourceFileEmulator::DataSourceFileEmulator(const DATA_SOURCE_TASK::SOURCE_TYPE & s_type,
-                                               const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
+DataSourceFileEmulator::DataSourceFileEmulator(const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type,
                                                const int & frame_size):
-    DataSource(s_type)
+    DataSource()
 {
     try
     {
@@ -32,7 +31,7 @@ DataSourceFileEmulator::DataSourceFileEmulator(const DATA_SOURCE_TASK::SOURCE_TY
     {
         m_buffer->setHeader(0xf113); // file
         m_buffer->setFrameCounter(0);
-        m_buffer->setSourceID(s_type);
+        m_buffer->setSourceID(1);
         m_buffer->setPayloadType(p_type);
     }
     else
@@ -132,6 +131,9 @@ void DataSourceFileEmulator::updateBufs()
     ++frm_counter;
     if (frm_counter >= UINT16_MAX)
         frm_counter = 0;
+
+    if (frm_counter % 1000 == 0)
+        m_buffer->setSourceID(m_buffer->sourceId() + 1);
 
     m_buffer->setFrameCounter(frm_counter);
 }

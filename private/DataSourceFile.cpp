@@ -7,7 +7,7 @@ namespace DATA_SOURCE_TASK
 {
 
 DataSourceFile::DataSourceFile(const std::string & file_path):
-    DataSource(SOURCE_TYPE::SOURCE_TYPE_FILE),
+    DataSource(),
     m_file_path {file_path}
 {
 }

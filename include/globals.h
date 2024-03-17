@@ -94,15 +94,6 @@ enum class PAYLOAD_TYPE : char
     PAYLOAD_TYPE_SIZE
 };
 
-// припускаємо шо можуть бути наступні типи джерел
-enum class SOURCE_TYPE : char
-{
-    SOURCE_TYPE_FILE = 0u,
-    SOURCE_TYPE_EMULATOR,
-    SOURCE_TYPE_UNDEFINED,
-    SOURCE_TYPE_SIZE
-};
-
 enum class DATA_SOURCE_ERROR : int
 {
     READ_SOURCE_ERROR = -1,
@@ -113,7 +104,7 @@ struct frame
 {
     std::uint32_t magic_word;    // ідентифікатор початку кадру (magic_word) 4 байти;
     std::uint16_t frame_counter; // циклічний лічильник кадрів (frame_counter) 2 байти;
-    SOURCE_TYPE source_id;       // ідентифікатор походження (source_id) 1 байт;
+    std::uint8_t source_id;      // ідентифікатор походження (source_id) 1 байт;
     PAYLOAD_TYPE payload_type;   // тип даних (payload_type) 1 байт;
     std::uint32_t payload_size;  // розмір блоку даних корисного навантаження (payload_size) 4 байти;
     void * payload;              // дані payload являють собою оцифовані відліки сигналу.

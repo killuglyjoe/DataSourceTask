@@ -1,9 +1,8 @@
 #include "DataSourceController.h"
 #include "DataSourceEmulator.h"
-#include "DataSourceFile.h"
 
-#include <sstream>
 #include <iostream>
+#include <sstream>
 #include <ostream>
 
 static constexpr const char * FILE_SOURCE = "dev";
@@ -32,28 +31,14 @@ int main(int argc, char ** argv)
     static_cast<void>(argc);
     static_cast<void>(argv);
 
-    // Плагін для роботи з джерелом.
-    constexpr DATA_SOURCE_TASK::SOURCE_TYPE s_type {DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_EMULATOR};
-
     // Тип вх. даних.
     constexpr DATA_SOURCE_TASK::PAYLOAD_TYPE p_type {DATA_SOURCE_TASK::PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT};
 
     std::shared_ptr<DATA_SOURCE_TASK::DataSource> data_source;
     try
     {
-        // Створимо джерело даних
-        switch (s_type)
-        {
-        case DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_FILE:
-            data_source = std::make_shared<DATA_SOURCE_TASK::DataSourceFile>(FILE_SOURCE);
-            break;
 
-        case DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_EMULATOR:
-            data_source = std::make_unique<DATA_SOURCE_TASK::DataSourceFileEmulator>(s_type, p_type, MAX_FRAME_SIZE);
-            break;
-        default:
-            break;
-        }
+        data_source = std::make_unique<DATA_SOURCE_TASK::DataSourceFileEmulator>(p_type, MAX_FRAME_SIZE);
 
         // Клас контролер для різних типів даних з різних джерел.
         std::unique_ptr<DATA_SOURCE_TASK::DataSourceController> data_source_processor
@@ -84,7 +69,7 @@ int main(int argc, char ** argv)
             ss << "Elapsed time for frame read: " << data_source_processor->elapsed() << " ms\n";
             ss << "-----------------------------------------------\n";
 
-            // Заголовок, к-сть обробленних кадрів, к-сть втрачених і відсоток втрачених кадрів за ~1сек
+                   // Заголовок, к-сть обробленних кадрів, к-сть втрачених і відсоток втрачених кадрів за ~1сек
             ss << "Frame head: " << std::hex << data_source_processor->header() << std::dec << "\n";
             ss << "-----------------------------------------------\n";
             ss << "Frames recieved: " << data_source_processor->framesTotal() << "\n";
@@ -100,12 +85,12 @@ int main(int argc, char ** argv)
             ss << "Percentage loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %\n";
             ss << "-----------------------------------------------\n";
 
-            // Груба частота кадрів, Мб/сек
+                   // Груба частота кадрів, Мб/сек
             static constexpr float byte_sec_2_bit_sec_conv {8. / (1000. * 1000.)};
             ss << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) * byte_sec_2_bit_sec_conv << " Mb/sec\n";
             ss << "-----------------------------------------------\n";
 
-            // Час перетворення на float
+                   // Час перетворення на float
             ss << "Elapsed time for frame validation: " << data_source_processor->frameValidationElapsed() << " ms\n";
             ss << "-----------------------------------------------\n";
             // Час запису в файл

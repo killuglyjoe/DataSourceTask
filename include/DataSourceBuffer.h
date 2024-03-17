@@ -76,15 +76,15 @@ public:
     }
     /// \brief ІД джерела
     /// \return
-    inline SOURCE_TYPE sourceId() const
+    inline std::uint8_t sourceId() const
     {
         if (m_frame)
             return m_frame->source_id;
 
-        return SOURCE_TYPE::SOURCE_TYPE_UNDEFINED;
+        return 0;
     }
     /// \brief Задамо ІД джерела
-    void setSourceID(const SOURCE_TYPE & source_type)
+    void setSourceID(const std::uint8_t & source_type)
     {
         if (m_frame)
             m_frame->source_id = source_type;
