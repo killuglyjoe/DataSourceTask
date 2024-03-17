@@ -5,9 +5,6 @@
 #include <sstream>
 #include <ostream>
 
-static constexpr const char * FILE_SOURCE = "dev";
-static constexpr const char * FILE_RECORD = "record";
-
 // 10 МБ/с = 1250000 байт/с - мінімальна пропускна здатність
 // 100 МБ/с = 12500000 байт/с - максимальна пропускна здатність
 // 200 Гц - частота видачі кадрів
@@ -16,7 +13,7 @@ static constexpr const char * FILE_RECORD = "record";
 static constexpr int MAX_FRAME_SIZE {static_cast<int>((12500000) / DATA_SOURCE_TASK::FRAME_RATE_PER_SEC)};
 
 // Мінімальний розмір кадру = (10×1024×1024) / 200 = 51 * 1024 Байт
-static constexpr int MIN_FRAME_SIZE {static_cast<int>((1250000) / DATA_SOURCE_TASK::FRAME_RATE_PER_SEC)};
+// static constexpr int MIN_FRAME_SIZE {static_cast<int>((1250000) / DATA_SOURCE_TASK::FRAME_RATE_PER_SEC)};
 
 #ifdef _WIN32
 // For Windows
