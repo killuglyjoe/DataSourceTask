@@ -1,4 +1,6 @@
 #include "DataSourceFrameProcessor.h"
+#include <iostream>
+#include <ostream>
 
 namespace DATA_SOURCE_TASK
 {
@@ -87,6 +89,7 @@ void DataSourceFrameProcessor::frameProcess()
 
                     if (!is_found)
                     {
+                        // Треба заміряти пам'ять, треба знати коли зупинитись
                         m_data_source_frame_recorders.push_back(
                             {source_id, std::make_shared<DataSourceFrameRecorder>("record_" + std::to_string(source_id), total_elements)});
                     }
@@ -95,7 +98,11 @@ void DataSourceFrameProcessor::frameProcess()
 
             m_can_validate = false;
             m_elapsed      = timer.elapsed();
+
+            continue;
         }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 

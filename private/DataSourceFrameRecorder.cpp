@@ -45,46 +45,50 @@ void DataSourceFrameRecorder::recordBlock()
 {
     m_is_can_record_active = true;
 
+    static Timer timer;
     while (m_is_can_record_active)
     {
-        if (!m_need_record)
-            continue;
-
-        Timer timer;
-        timer.reset();
-
-        // Будемо просто перезаписувати поточний файл.
-        std::ofstream source_file(m_record_name, std::ios::out | std::ios::binary);
-
-        if (!source_file)
-            continue;
-
-        char * wbuf  = reinterpret_cast<char *>(m_record_buffer.data());
-        static int buz_size = m_record_buffer.size()  * FLOAT_SIZE;
-
-        source_file.write(wbuf, buz_size);
-
-        m_need_record = false;
-
-        if (source_file.fail())
+        if (m_need_record)
         {
-            std::ios_base::iostate state = source_file.rdstate();
+            timer.reset();
 
-            if (state & std::ios_base::eofbit)
+            // Будемо просто перезаписувати поточний файл.
+            std::ofstream source_file(m_record_name, std::ios::out | std::ios::binary);
+
+            if (!source_file)
+                continue;
+
+            char * wbuf  = reinterpret_cast<char *>(m_record_buffer.data());
+            static int buz_size = m_record_buffer.size()  * FLOAT_SIZE;
+
+            source_file.write(wbuf, buz_size);
+
+            m_need_record = false;
+
+            if (source_file.fail())
             {
-                std::cout << "DataSourceFrameRecorder: End of file reached." << std::endl;
+                std::ios_base::iostate state = source_file.rdstate();
+
+                if (state & std::ios_base::eofbit)
+                {
+                    std::cout << "DataSourceFrameRecorder: End of file reached." << std::endl;
+                }
+                if (state & std::ios_base::failbit)
+                {
+                    std::cout << "DataSourceFrameRecorder: Non-fatal I/O error occurred." << std::endl;
+                }
+                if (state & std::ios_base::badbit)
+                {
+                    std::cout << "DataSourceFrameRecorder: Fatal I/O error occurred." << std::endl;
+                }
             }
-            if (state & std::ios_base::failbit)
-            {
-                std::cout << "DataSourceFrameRecorder: Non-fatal I/O error occurred." << std::endl;
-            }
-            if (state & std::ios_base::badbit)
-            {
-                std::cout << "DataSourceFrameRecorder: Fatal I/O error occurred." << std::endl;
-            }
+
+            m_elapsed = timer.elapsed();
+
+            continue;
         }
 
-        m_elapsed = timer.elapsed();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
