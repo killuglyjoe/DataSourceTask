@@ -4,6 +4,7 @@
 #include "DataSourceBuffer.h"
 #include "DataSourceFrameRecorder.h"
 
+#include <list>
 #include <memory>
 #include <mutex>
 #include <atomic>
@@ -56,9 +57,9 @@ public:
     /// \brief Пройдений час на обробки вх. даних в потоці.
     /// \return мілісекунди
     inline double elapsed() { return m_elapsed; }
-    /// \brief Час запису оброблених даних в файл.
+    /// \brief Усереднений час запису оброблених даних в файл.
     /// \return мілісекунди
-    inline double saveFrameElapsed() { return m_data_source_recorder->elapsed(); }
+    double saveFrameElapsed();
 
 protected:
     /// \brief Потокова функція обробки вхідних буферів
@@ -97,7 +98,14 @@ private:
     std::atomic<int> m_flt_ready_buffer;                            // 0..MAX_PROCESSING_BUF_NUM-1
     std::vector<std::shared_ptr<DataSourceBuffer<float>>> m_buffer; // дані будуть перетворені в float
 
-    std::unique_ptr<DataSourceFrameRecorder> m_data_source_recorder; // клас для запису оброблених даних в файл.
+    struct source_recorder
+    {
+        int source_id;                                     // ІД джерела кадру
+        std::shared_ptr<DataSourceFrameRecorder> recorder; // клас для запису оброблених даних в файл.
+    };
+
+    // Реєстратор відліків блоками відліків, к-сть яких є число степеня 2.
+    std::list<source_recorder> m_data_source_frame_recorders;
 };
 
 } // namespace DATA_SOURCE_TASK

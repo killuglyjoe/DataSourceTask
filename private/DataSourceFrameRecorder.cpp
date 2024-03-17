@@ -23,7 +23,7 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
     m_record_name {record_name},
     m_need_record {false}
 {
-    m_buffer_size = nearestPowerOfTwo(num_elements*4);
+    m_buffer_size = nearestPowerOfTwo(num_elements * RECORD_SIZE);
 
     // Буфери для запису розміром кратним степеня двійки
     for (std::size_t i = 0; i < MAX_REC_BUF_NUM; ++i)

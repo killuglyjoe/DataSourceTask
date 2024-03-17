@@ -13,6 +13,9 @@ namespace DATA_SOURCE_TASK
 // К-сть буферів для обробки.
 static constexpr std::size_t MAX_REC_BUF_NUM {2};
 
+// К-сть блоків кратних степеню двійки для запису в файл.
+static constexpr std::size_t RECORD_SIZE {10};
+
 struct record_buffer
 {
     int id;
@@ -53,6 +56,7 @@ protected:
     void recordBlock();
 
 private:
+    int m_source_id                    = -1;
     std::uint8_t m_active_buffer_index = 0;
     std::uint32_t m_buffer_size        = 0; // к-сть відліків степепня числа 2
     std::string m_record_name          = "record"; // ім'я файлу.

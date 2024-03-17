@@ -66,6 +66,7 @@ private:
     std::thread m_read_thread;
 
     std::shared_ptr<DATA_SOURCE_TASK::DataSource> m_data_source;
+
     std::unique_ptr<DataSourceFrameProcessor> m_data_source_frm_processor;  // клас для обробки даних
     std::shared_ptr<DataSourceBufferInterface> m_buffer;                    // масиви для зберішання вх. даних
 

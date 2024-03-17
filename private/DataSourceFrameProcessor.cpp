@@ -1,23 +1,18 @@
 #include "DataSourceFrameProcessor.h"
 
-#include <iostream>
-#include <ostream>
-
 namespace DATA_SOURCE_TASK
 {
 
 DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     m_frame_size {frame_size},
     m_packets_loss {0},
-    m_stream_broken{0},
+    m_stream_broken {0},
     m_bad_frames {0},
     m_can_validate {false},
     m_src_ready_buffer {-1},
     m_active_buffer {0},
     m_flt_ready_buffer {-1}
 {
-    static Timer timer;
-
     // виділимо данні
     for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
     {
@@ -28,7 +23,7 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     }
 
     const int max_total_elements = m_source_buffer[0][0]->totalElements();
-    const int float_frame_size = FRAME_HEADER_SIZE + max_total_elements * sizeof(float);
+    const int float_frame_size   = FRAME_HEADER_SIZE + max_total_elements * sizeof(float);
 
     // float буфери. К-сть елементів максимальна,
     // тому будемо повертати реальну к-сть оброблених відліків з джерела.
@@ -37,12 +32,8 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
         m_buffer.push_back(std::make_shared<DataSourceBuffer<float>>(float_frame_size));
     }
 
-    // Реєстратор відліків блоками відліків, к-сть яких є число степеня 2.
-    m_data_source_recorder = std::make_unique<DataSourceFrameRecorder>("record", max_total_elements);
-
-    std::cout << timer.elapsed() << std::endl;
     m_is_process_active = true;
-    m_process_thread = std::thread(&DataSourceFrameProcessor::frameProcess, this);
+    m_process_thread    = std::thread(&DataSourceFrameProcessor::frameProcess, this);
 }
 
 DataSourceFrameProcessor::~DataSourceFrameProcessor()
@@ -80,8 +71,25 @@ void DataSourceFrameProcessor::frameProcess()
 
                 if (total_elements)
                 {
-                    // реєстрація блоків даних
-                    m_data_source_recorder->putNewFrame(m_buffer[m_flt_ready_buffer], total_elements);
+                    // Перевіримо ІД джерела і виокремимо для запису в файл
+                    const int source_id = static_cast<int>(m_buffer[m_flt_ready_buffer]->frame()->source_id);
+
+                    bool is_found = false;
+                    for (auto & recorder : m_data_source_frame_recorders)
+                    {
+                        if (recorder.source_id == source_id)
+                        {
+                            // реєстрація блоків даних
+                            recorder.recorder->putNewFrame(m_buffer[m_flt_ready_buffer], total_elements);
+                            is_found = true;
+                        }
+                    }
+
+                    if (!is_found)
+                    {
+                        m_data_source_frame_recorders.push_back(
+                            {source_id, std::make_shared<DataSourceFrameRecorder>("record_" + std::to_string(source_id), total_elements)});
+                    }
                 }
             }
 
@@ -213,7 +221,7 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
     // Новий кадр для масиву даних
     ++m_src_ready_buffer;
 
-    PAYLOAD_TYPE p_type = frame->frame()->payload_type;
+    const PAYLOAD_TYPE p_type = frame->frame()->payload_type;
 
     // Обміняємо кадр для обробки
     m_source_buffer[m_active_buffer][m_src_ready_buffer].swap(frame);
@@ -256,6 +264,25 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
     {
         ++m_stream_broken;
     }
+}
+
+double DataSourceFrameProcessor::saveFrameElapsed()
+{
+    static double average_elapsed;
+
+    average_elapsed = 0;
+
+    for (auto & recorder : m_data_source_frame_recorders)
+    {
+        average_elapsed += recorder.recorder->elapsed();
+    }
+
+    int num_toatal = m_data_source_frame_recorders.size();
+
+    if (num_toatal)
+        average_elapsed /= num_toatal;
+
+    return average_elapsed;
 }
 
 } // namespace DATA_SOURCE_TASK

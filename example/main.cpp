@@ -2,6 +2,7 @@
 #include "DataSourceEmulator.h"
 #include "DataSourceFile.h"
 
+#include <sstream>
 #include <iostream>
 #include <ostream>
 
@@ -44,7 +45,7 @@ int main(int argc, char ** argv)
         switch (s_type)
         {
         case DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_FILE:
-            data_source = std::make_shared<DATA_SOURCE_TASK::DataSourceFile>(FILE_RECORD);
+            data_source = std::make_shared<DATA_SOURCE_TASK::DataSourceFile>(FILE_SOURCE);
             break;
 
         case DATA_SOURCE_TASK::SOURCE_TYPE::SOURCE_TYPE_EMULATOR:
@@ -74,42 +75,46 @@ int main(int argc, char ** argv)
 
             int diff_frames = data_source_processor->framesTotal() - (prev_counter == -1 ? 0 : prev_counter);
 
-            std::cout << "Frame size: " << MAX_FRAME_SIZE << " bytes"<< std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
-            std::cout << "Elapsed time for frame write: " << data_source_processor->writeFramelapsed() << " ms" << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
-            std::cout << "Elapsed time for frame read: " << data_source_processor->elapsed() << " ms" << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
+            std::stringstream ss;
+
+            ss << "Frame size: " << MAX_FRAME_SIZE << " bytes\n";
+            ss << "-----------------------------------------------\n";
+            ss << "Elapsed time for frame write: " << data_source_processor->writeFramelapsed() << " ms\n";
+            ss << "-----------------------------------------------\n";
+            ss << "Elapsed time for frame read: " << data_source_processor->elapsed() << " ms\n";
+            ss << "-----------------------------------------------\n";
 
             // Заголовок, к-сть обробленних кадрів, к-сть втрачених і відсоток втрачених кадрів за ~1сек
-            std::cout << "Frame head: " << std::hex << data_source_processor->header() << std::dec << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
-            std::cout << "Frames recieved: " << data_source_processor->framesTotal() << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
-            std::cout << "Processed frames: " << diff_frames << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
-            std::cout << "Bad frames: " << data_source_processor->getBadFrames() << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
-            std::cout << "Frames loss: " << data_source_processor->getPacketsLoss() << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
-            std::cout << "Broken stream frames: " << data_source_processor->getBrokenFrames() << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
-            std::cout << "Percentage loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %" << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
+            ss << "Frame head: " << std::hex << data_source_processor->header() << std::dec << "\n";
+            ss << "-----------------------------------------------\n";
+            ss << "Frames recieved: " << data_source_processor->framesTotal() << "\n";
+            ss << "-----------------------------------------------\n";
+            ss << "Processed frames: " << diff_frames << "\n";
+            ss << "-----------------------------------------------\n";
+            ss << "Bad frames: " << data_source_processor->getBadFrames() << "\n";
+            ss << "-----------------------------------------------\n";
+            ss << "Frames loss: " << data_source_processor->getPacketsLoss() << "\n";
+            ss << "-----------------------------------------------\n";
+            ss << "Broken stream frames: " << data_source_processor->getBrokenFrames() << "\n";
+            ss << "-----------------------------------------------\n";
+            ss << "Percentage loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %\n";
+            ss << "-----------------------------------------------\n";
 
             // Груба частота кадрів, Мб/сек
             static constexpr float byte_sec_2_bit_sec_conv {8. / (1000. * 1000.)};
-            std::cout << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) * byte_sec_2_bit_sec_conv << " Mb/sec" << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
+            ss << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) * byte_sec_2_bit_sec_conv << " Mb/sec\n";
+            ss << "-----------------------------------------------\n";
 
             // Час перетворення на float
-            std::cout << "Elapsed time for frame validation: " << data_source_processor->frameValidationElapsed() << " ms" << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
+            ss << "Elapsed time for frame validation: " << data_source_processor->frameValidationElapsed() << " ms\n";
+            ss << "-----------------------------------------------\n";
             // Час запису в файл
-            std::cout << "Elapsed time for frame record: " << data_source_processor->saveFramelapsed() << " ms" << std::endl;
-            std::cout << "-----------------------------------------------"<< std::endl;
+            ss << "Elapsed time for frame record: " << data_source_processor->saveFramelapsed() << " ms\n";
+            ss << "-----------------------------------------------\n";
 
             prev_counter = data_source_processor->framesTotal();
+
+            std::cout << ss.rdbuf() << std::endl;
 
             // пауза перед оновленням екрану
             while (display_update_timer.elapsed() < 1000.)
