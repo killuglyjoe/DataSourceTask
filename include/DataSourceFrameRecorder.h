@@ -56,7 +56,6 @@ protected:
     void recordBlock();
 
 private:
-    int m_source_id                    = -1;
     std::uint8_t m_active_buffer_index = 0;
     std::uint32_t m_buffer_size        = 0; // к-сть відліків степепня числа 2
     std::string m_record_name          = "record"; // ім'я файлу.
