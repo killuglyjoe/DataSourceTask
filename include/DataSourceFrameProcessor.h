@@ -86,6 +86,8 @@ private:
     std::thread m_process_thread;
     std::atomic<bool> m_is_process_active;
 
+    std::atomic<int> m_cur_frm_counter {-1};
+
     // --------------   Дані з джерела   --------------------
     std::atomic<int> m_src_ready_buffer; // 0...MAX_PROCESSING_BUF_NUM-1
     std::atomic<int> m_active_buffer;    // 0...BUFERIZATION_NUM-1

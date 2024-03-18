@@ -26,9 +26,8 @@ int DataSourceFile::read(char * data, int size)
     if (!source_file.seekg(0, std::ios::beg))
         return static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
 
-    static int index;
-    index = 0;
-    static char character;
+    int index = 0;
+    char character;
 
     while (index < size && (source_file.get(character)))
     {

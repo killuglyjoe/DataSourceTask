@@ -46,7 +46,7 @@ DataSourceFrameProcessor::~DataSourceFrameProcessor()
 
 void DataSourceFrameProcessor::frameProcess()
 {
-    static Timer timer;
+    Timer timer;
 
     while (m_is_process_active)
     {
@@ -109,25 +109,23 @@ int DataSourceFrameProcessor::validateFrame(const std::shared_ptr<DataSourceBuff
     char * buf  = buffer->payload();
 
     // розбираємось з лічильком кадру
-    static int cur_frm_counter = -1;
-
-    if (cur_frm_counter == -1)
+    if (m_cur_frm_counter == -1)
     {
-        cur_frm_counter = frm->frame_counter;
+        m_cur_frm_counter = frm->frame_counter;
     }
     else
     {
         // лічільник кадрів
-        const int delta = frm->frame_counter - cur_frm_counter;
+        const int delta = frm->frame_counter - m_cur_frm_counter;
 
         if ((delta > 1) && (delta < UINT16_MAX))
         {
-            m_packets_loss += frm->frame_counter - cur_frm_counter - 1;
+            m_packets_loss += frm->frame_counter - m_cur_frm_counter - 1;
         }
     }
 
     // Запам'ятовуємо лічильник.
-    cur_frm_counter = frm->frame_counter;
+    m_cur_frm_counter = frm->frame_counter;
 
     // сформуємо float масиви
     if (m_flt_ready_buffer >= static_cast<int>(MAX_PROCESSING_BUF_NUM) - 1)

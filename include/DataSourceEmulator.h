@@ -34,6 +34,7 @@ protected:
 private:
     int m_byte_size = 0;
 
+    std::atomic<uint16_t> m_frm_counter {0};
     std::mutex m_read_lock;
 
     std::shared_ptr<DataSourceBufferInterface> m_buffer;

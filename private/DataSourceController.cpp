@@ -25,10 +25,10 @@ void DataSourceController::readData()
 {
     m_is_read_active = true;
 
-    static int ret_size = static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
-    static std::atomic<double> elapsed;
+    int ret_size = static_cast<int>(DATA_SOURCE_ERROR::READ_SOURCE_ERROR);
+    std::atomic<double> elapsed;
 
-    static Timer timer;
+    Timer timer;
 
     while (m_is_read_active)
     {

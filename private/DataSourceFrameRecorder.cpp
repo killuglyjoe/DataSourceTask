@@ -53,7 +53,7 @@ void DataSourceFrameRecorder::recordBlock()
 {
     m_is_can_record_active = true;
 
-    static Timer timer;
+    Timer timer;
     while (m_is_can_record_active)
     {
         if (m_need_record)
@@ -67,7 +67,7 @@ void DataSourceFrameRecorder::recordBlock()
                 continue;
 
             char * wbuf  = reinterpret_cast<char *>(m_record_buffer.data());
-            static int buz_size = m_record_buffer.size()  * FLOAT_SIZE;
+            int buz_size = m_record_buffer.size()  * FLOAT_SIZE;
 
             source_file.write(wbuf, buz_size);
 

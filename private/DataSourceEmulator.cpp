@@ -47,7 +47,7 @@ DataSourceFileEmulator::~DataSourceFileEmulator() {}
 
 void DataSourceFileEmulator::generateRandom()
 {
-    static float val = 1.f;
+    float val = 1.f;
 
     if (!is_used_random)
         val += 1.f;
@@ -124,28 +124,26 @@ void DataSourceFileEmulator::generateRandom()
 
 void DataSourceFileEmulator::updateBufs()
 {
-    static uint16_t frm_counter = 0;
-
     generateRandom();
 
-    ++frm_counter;
-    if (frm_counter >= UINT16_MAX)
-        frm_counter = 0;
+    ++m_frm_counter;
+    if (m_frm_counter >= UINT16_MAX)
+        m_frm_counter = 0;
 
-    if (frm_counter % 1000 == 0)
+    if (m_frm_counter % 1000 == 0)
         m_buffer->setSourceID(m_buffer->sourceId() + 1);
 
-    m_buffer->setFrameCounter(frm_counter);
+    m_buffer->setFrameCounter(m_frm_counter);
 }
+
+Timer overall_timer; // між оновленням даних
+Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 
 int DataSourceFileEmulator::read(char * data, int size)
 {
     std::lock_guard<std::mutex> lock(m_read_lock);
 
     int ret_size = size;
-
-    static Timer overall_timer; // між оновленням даних
-    static Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 
     double elapsed = 0.;
 
