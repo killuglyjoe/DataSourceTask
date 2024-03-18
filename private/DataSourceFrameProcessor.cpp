@@ -74,18 +74,14 @@ void DataSourceFrameProcessor::frameProcess()
                     // Перевіримо ІД джерела і виокремимо для запису в файл
                     const int source_id = static_cast<int>(m_buffer[m_flt_ready_buffer]->frame()->source_id);
 
-                    bool is_found = false;
-                    for (auto & recorder : m_data_source_frame_recorders)
-                    {
-                        if (recorder.first == source_id)
-                        {
-                            // реєстрація блоків даних
-                            recorder.second->putNewFrame(m_buffer[m_flt_ready_buffer], total_elements);
-                            is_found = true;
-                        }
-                    }
+                    const auto & it = m_data_source_frame_recorders.find(source_id);
 
-                    if (!is_found)
+                    if (it != m_data_source_frame_recorders.end())
+                    {
+                        // реєстрація блоків даних
+                        it->second->putNewFrame(m_buffer[m_flt_ready_buffer], total_elements);
+                    }
+                    else
                     {
                         // Треба заміряти пам'ять, треба знати коли зупинитись
                         m_data_source_frame_recorders[source_id] = std::make_shared<DataSourceFrameRecorder>(
