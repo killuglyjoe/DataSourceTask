@@ -53,7 +53,7 @@ public:
     /// \brief Функція записує вх. кадр в масив буферів кадрів.
     /// \param frame
     /// \param updated_size
-    void putNewFrame(std::shared_ptr<DataSourceBufferInterface> & frame, const int & updated_size);
+    void putNewFrame(std::shared_ptr<DataSourceBufferInterface> & frame, int updated_size);
     /// \brief Пройдений час на обробки вх. даних в потоці.
     /// \return мілісекунди
     inline double elapsed() { return m_elapsed; }

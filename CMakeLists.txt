@@ -6,7 +6,7 @@ cmake_policy(SET CMP0048 NEW)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
-project("DataSourec test task" LANGUAGES CXX)
+project("DataSource test task" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -33,21 +33,21 @@ set(SOURCES
 )
 
 # Бібліотека для роботи з даними
-add_library(DataSouce ${HEADERS} ${SOURCES})
+add_library(DataSource ${HEADERS} ${SOURCES})
 
-set_target_properties(DataSouce PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(DataSource PROPERTIES LINKER_LANGUAGE CXX)
 
-target_include_directories(DataSouce
+target_include_directories(DataSource
     PUBLIC include
     PRIVATE private)
 
 # Приклад роботи з бібліотекою
-add_executable(DataSouceExample
+add_executable(DataSourceExample
     example/main.cpp
 )
 
 if (CMAKE_SYSTEM_NAME STREQUAL Windows)
-    target_link_libraries(DataSouceExample DataSouce)
+    target_link_libraries(DataSourceExample DataSource)
 else()
-    target_link_libraries(DataSouceExample DataSouce -lpthread)
+    target_link_libraries(DataSourceExample DataSource -lpthread)
 endif()

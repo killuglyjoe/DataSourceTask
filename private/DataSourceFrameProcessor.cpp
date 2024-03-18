@@ -56,8 +56,7 @@ void DataSourceFrameProcessor::frameProcess()
 
             for (std::size_t idx = 0; idx < MAX_PROCESSING_BUF_NUM; ++idx)
             {
-                static int total_elements;
-                total_elements = 0;
+                int total_elements = 0;
 
                 // поточний буфер оновлюється, тому беремо попередній.
                 int ready_buffer = m_active_buffer - 1;
@@ -200,9 +199,12 @@ int DataSourceFrameProcessor::validateFrame(const std::shared_ptr<DataSourceBuff
     return total_elements;
 }
 
-void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInterface> & frame, const int & updated_size)
+void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInterface> & frame, int updated_size)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
+
+    if (!frame.get())
+        return;
 
     // Заповнюємо буфери з масивами кадрів
     if (m_src_ready_buffer >= static_cast<int>(MAX_PROCESSING_BUF_NUM) - 1)
@@ -269,7 +271,7 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
 
 double DataSourceFrameProcessor::saveFrameElapsed()
 {
-    static double average_elapsed;
+    double average_elapsed;
 
     average_elapsed = 0;
 

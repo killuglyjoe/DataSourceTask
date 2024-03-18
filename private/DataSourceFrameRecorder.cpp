@@ -97,6 +97,9 @@ void DataSourceFrameRecorder::putNewFrame(const std::shared_ptr<DataSourceBuffer
 {
     std::lock_guard<std::mutex> lock(m_buf_lock);
 
+    if (!frame.get())
+        return;
+
     // Реальний розмір оброблених даних
     std::size_t av_in_data = total_elements * FLOAT_SIZE;
 

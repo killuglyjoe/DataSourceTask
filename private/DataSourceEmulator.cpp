@@ -58,7 +58,7 @@ void DataSourceFileEmulator::generateRandom()
     {
         std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(m_buffer->payload());
 
-        static const uint32_t total_elements = m_buffer->payloadSize() / UINT8_SIZE;
+        const uint32_t total_elements = m_buffer->payloadSize() / UINT8_SIZE;
 
         for (uint32_t i = 0; i < total_elements; ++i)
         {
@@ -74,7 +74,7 @@ void DataSourceFileEmulator::generateRandom()
     {
         std::int16_t * payload = reinterpret_cast<std::int16_t *>(m_buffer->payload());
 
-        static const uint32_t total_elements = m_buffer->payloadSize() / INT16_SIZE;
+        const uint32_t total_elements = m_buffer->payloadSize() / INT16_SIZE;
 
         for (uint32_t i = 0; i < total_elements; ++i)
         {
@@ -90,7 +90,7 @@ void DataSourceFileEmulator::generateRandom()
     {
         std::int32_t * payload = reinterpret_cast<std::int32_t *>(m_buffer->payload());
 
-        static const uint32_t total_elements = m_buffer->payloadSize() / INT32_SIZE;
+        const uint32_t total_elements = m_buffer->payloadSize() / INT32_SIZE;
 
         for (uint32_t i = 0; i < total_elements; ++i)
         {
@@ -105,7 +105,7 @@ void DataSourceFileEmulator::generateRandom()
     case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_IEEE_FLOAT:
     {
         float * payload = reinterpret_cast<float *>(m_buffer->payload());
-        static const uint32_t total_elements = m_buffer->payloadSize() / FLOAT_SIZE;
+        const uint32_t total_elements = m_buffer->payloadSize() / FLOAT_SIZE;
 
         for (uint32_t i = 0; i < total_elements; ++i)
         {
@@ -147,12 +147,10 @@ int DataSourceFileEmulator::read(char * data, int size)
     static Timer overall_timer; // між оновленням даних
     static Timer diff_timer;    // для вирівнювання sleep До 200 Гц
 
-    static double elapsed = 0.;
+    double elapsed = 0.;
 
     overall_timer.reset();
     diff_timer.reset();
-
-    elapsed = 0.;
 
     updateBufs();
 
@@ -165,7 +163,7 @@ int DataSourceFileEmulator::read(char * data, int size)
         ++b;
     }
 
-    std::copy(m_buffer->data(), m_buffer->data() + ret_size, data);
+    memcpy(data, m_buffer->data(), ret_size);
 
     elapsed = overall_timer.elapsed();
 
