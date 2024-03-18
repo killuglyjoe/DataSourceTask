@@ -41,6 +41,14 @@ DataSourceFrameRecorder::DataSourceFrameRecorder(const std::string & record_name
     m_record_to_file = std::thread(&DataSourceFrameRecorder::recordBlock, this);
 }
 
+DataSourceFrameRecorder::~DataSourceFrameRecorder()
+{
+    m_is_can_record_active = false;
+
+    if (m_record_to_file.joinable())
+        m_record_to_file.join();
+}
+
 void DataSourceFrameRecorder::recordBlock()
 {
     m_is_can_record_active = true;

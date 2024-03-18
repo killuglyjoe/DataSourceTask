@@ -35,7 +35,7 @@ public:
     /// \param record_name - базове ім'я файлу зберігання
     /// \param block_size - к-сть елемнтів
     DataSourceFrameRecorder(const std::string & record_name, const int & num_elements);
-    virtual ~DataSourceFrameRecorder() {}
+    virtual ~DataSourceFrameRecorder();
 
     /// \brief К-сть відліків для запису, к-сть кратна степеню двійки.
     /// \return

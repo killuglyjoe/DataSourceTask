@@ -1,6 +1,8 @@
 #include "DataSourceController.h"
 #include "DataSourceEmulator.h"
 
+#include <signal.h>
+
 #include <iostream>
 #include <sstream>
 #include <ostream>
@@ -23,10 +25,20 @@ static constexpr int MAX_FRAME_SIZE {static_cast<int>((12500000) / DATA_SOURCE_T
 #define CLEAR_CONSOLE "clear"
 #endif
 
+bool g_main_loop {true};
+
+void exit_handler(int s)
+{
+    std::cout << "Signal caught - " << s << std::endl;
+    g_main_loop = false;
+}
+
 int main(int argc, char ** argv)
 {
     static_cast<void>(argc);
     static_cast<void>(argv);
+
+    signal(SIGINT, &exit_handler);
 
     // Тип вх. даних.
     constexpr DATA_SOURCE_TASK::PAYLOAD_TYPE p_type {DATA_SOURCE_TASK::PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT};
@@ -44,7 +56,7 @@ int main(int argc, char ** argv)
         DATA_SOURCE_TASK::Timer display_update_timer;
 
         // Вивід результатів в консоль
-        for (;;)
+        while (g_main_loop)
         {
             display_update_timer.reset();
 
@@ -79,7 +91,8 @@ int main(int argc, char ** argv)
             ss << "-----------------------------------------------\n";
             ss << "Broken stream frames: " << data_source_processor->getBrokenFrames() << "\n";
             ss << "-----------------------------------------------\n";
-            ss << "Percentage loss: " << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %\n";
+            ss << "Percentage loss: "
+               << (100. * data_source_processor->getPacketsLoss()) / data_source_processor->framesTotal() << " %\n";
             ss << "-----------------------------------------------\n";
 
             // Груба частота кадрів, Мб/сек
