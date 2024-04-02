@@ -16,6 +16,7 @@ public:
 
     DataSourceBufferInterface & operator=(DataSourceBufferInterface & other) noexcept
     {
+        buffer.clear();
         buffer.swap(other.buffer);
 
         m_frame   = reinterpret_cast<struct frame *>(buffer.data());
@@ -26,14 +27,18 @@ public:
 
     DataSourceBufferInterface(DataSourceBufferInterface & other) noexcept
     {
+        buffer.clear();
         buffer.swap(other.buffer);
+
         m_frame   = reinterpret_cast<struct frame *>(buffer.data());
         m_payload = reinterpret_cast<char *>(buffer.data() + FRAME_HEADER_SIZE);
     }
 
     DataSourceBufferInterface(DataSourceBufferInterface && other) noexcept
     {
+        buffer.clear();
         buffer.swap(other.buffer);
+
         m_frame   = reinterpret_cast<struct frame *>(buffer.data());
         m_payload = reinterpret_cast<char *>(buffer.data() + FRAME_HEADER_SIZE);
     }

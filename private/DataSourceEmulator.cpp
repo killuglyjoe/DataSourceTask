@@ -6,7 +6,7 @@
 namespace DATA_SOURCE_TASK
 {
 
-static constexpr bool is_used_random {false};
+constexpr bool is_used_random {false};
 
 float randMinToMax(const float & min, const float & max)
 {
@@ -19,7 +19,6 @@ DataSourceFileEmulator::DataSourceFileEmulator(const DATA_SOURCE_TASK::PAYLOAD_T
 {
     try
     {
-        // виділимо данні
         m_buffer = std::make_shared<DATA_SOURCE_TASK::DataSourceBuffer<std::uint8_t>>(frame_size);
     }
     catch (const std::exception & e)

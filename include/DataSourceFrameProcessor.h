@@ -35,7 +35,7 @@ public:
     /// \brief Перевірка бракованих кадрів.
     /// Конвертація в float.
     /// \param buffer - дані з джерела
-    /// \return - к-сть rjydthnjdfyb[ відліків float
+    /// \return - к-сть відліків float
     int validateFrame(const std::shared_ptr<DataSourceBufferInterface> & buffer);
     /// \brief Розмір кадру
     /// \return
@@ -56,7 +56,7 @@ public:
     void putNewFrame(std::shared_ptr<DataSourceBufferInterface> & frame, int updated_size);
     /// \brief Пройдений час на обробки вх. даних в потоці.
     /// \return мілісекунди
-    inline double elapsed() { return m_elapsed; }
+    inline double validationElapsed() { return m_elapsed; }
     /// \brief Усереднений час запису оброблених даних в файл.
     /// \return мілісекунди
     double saveFrameElapsed();

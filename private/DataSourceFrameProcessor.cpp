@@ -25,8 +25,7 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     const int max_total_elements = m_source_buffer[0][0]->totalElements();
     const int float_frame_size   = FRAME_HEADER_SIZE + max_total_elements * sizeof(float);
 
-    // float буфери. К-сть елементів максимальна,
-    // тому будемо повертати реальну к-сть оброблених відліків з джерела.
+    // float буфери. К-сть елементів максимальна.
     for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; i++)
     {
         m_buffer.push_back(std::make_shared<DataSourceBuffer<float>>(float_frame_size));
@@ -82,7 +81,7 @@ void DataSourceFrameProcessor::frameProcess()
                     }
                     else
                     {
-                        // Треба заміряти пам'ять, треба знати коли зупинитись
+                        // \TODO!! Треба заміряти пам'ять, треба знати коли зупинитись
                         m_data_source_frame_recorders[source_id] = std::make_shared<DataSourceFrameRecorder>(
                             "record_" + std::to_string(source_id), total_elements);
                     }
@@ -95,7 +94,8 @@ void DataSourceFrameProcessor::frameProcess()
             continue;
         }
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        // Timeout
+        std::this_thread::sleep_for(std::chrono::milliseconds(static_cast<int>(MAX_FREQ_READ)));
     }
 }
 

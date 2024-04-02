@@ -96,15 +96,15 @@ int main(int argc, char ** argv)
             ss << "-----------------------------------------------\n";
 
             // Груба частота кадрів, Мб/сек
-            static constexpr float byte_sec_2_bit_sec_conv {8. / (1000. * 1000.)};
+            constexpr float byte_sec_2_bit_sec_conv {8. / (1000. * 1000.)};
             ss << "Download speed: " << (diff_frames * MAX_FRAME_SIZE) * byte_sec_2_bit_sec_conv << " Mb/sec\n";
             ss << "-----------------------------------------------\n";
 
             // Час перетворення на float
-            ss << "Elapsed time for frame validation: " << data_source_processor->frameValidationElapsed() << " ms\n";
+            ss << "Elapsed time for frame validation: " << data_source_processor->validationElapsed() << " ms\n";
             ss << "-----------------------------------------------\n";
             // Час запису в файл
-            ss << "Elapsed time for frame record: " << data_source_processor->saveFramelapsed() << " ms\n";
+            ss << "Elapsed time for frame record: " << data_source_processor->saveFrameElapsed() << " ms\n";
             ss << "-----------------------------------------------\n";
 
             prev_counter = data_source_processor->framesTotal();

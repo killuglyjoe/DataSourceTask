@@ -80,7 +80,7 @@ static constexpr double FRAME_RATE_PER_SEC {200.};    // 200 Hz
 static constexpr double MAX_FREQ_READ {1000. / 200.}; // 200 Hz = 5ms
 
 // К-сть буферів під читання/обробку.
-// Можливо краще задавати в зовн. наоаштуваннях.
+// Можливо краще задавати в зовн. налаштуваннях.
 static constexpr std::size_t MAX_PROCESSING_BUF_NUM {10};
 
 // тип даних payload_type може бути:

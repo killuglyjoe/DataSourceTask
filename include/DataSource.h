@@ -22,7 +22,7 @@ public:
     /// \return
     virtual int read(char * data, int size) = 0;
 
-    inline double elapsed() { return m_elapsed; }
+    inline double readElapsed() { return m_elapsed; }
 
 protected:
     std::atomic<int> m_elapsed;

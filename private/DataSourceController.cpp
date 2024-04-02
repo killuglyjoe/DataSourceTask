@@ -9,12 +9,10 @@ namespace DATA_SOURCE_TASK
 {
 
 DataSourceController::DataSourceController(const std::shared_ptr<DataSource> & data_source, const uint32_t & frame_size):
+    DataSourceFrameProcessor(frame_size),
     m_data_source {data_source}
 {
     m_buffer = std::make_shared<DataSourceBuffer<std::uint8_t>>(frame_size);
-
-    // Обробка кадрів - перетворенн в float, складання, запис
-    m_data_source_frm_processor = std::make_unique<DataSourceFrameProcessor>(frame_size);
 
     // - організувати зчитування даних в окремому потоці;
     // Потік який читає данні
@@ -44,7 +42,7 @@ void DataSourceController::readData()
         if (ret_size > 0)
         {
             // обробка даних
-            m_data_source_frm_processor->putNewFrame(m_buffer, ret_size);
+            putNewFrame(m_buffer, ret_size);
         }
 
         elapsed = timer.elapsed();

@@ -18,7 +18,7 @@ public:
     /// \param s_type - тип джерела
     /// \param p_type - тип даних
     /// \param frame_size - к-сть відліків сигналу
-    DataSourceFileEmulator(const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type, const int & frame_size);
+    explicit DataSourceFileEmulator(const DATA_SOURCE_TASK::PAYLOAD_TYPE & p_type, const int & frame_size);
 
     virtual ~DataSourceFileEmulator();
 
