@@ -13,6 +13,9 @@ public:
     /// \brief Конструктор класу
     /// \param source - тип джерела
     explicit DataSource();
+
+    DATA_SOURCE_NON_COPYABLE(DataSource)
+
     virtual ~DataSource() = default;
 
     /// \brief Вичитуємо кадр з джерела.

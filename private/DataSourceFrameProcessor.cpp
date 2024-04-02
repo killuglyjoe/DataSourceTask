@@ -13,7 +13,7 @@ DataSourceFrameProcessor::DataSourceFrameProcessor(const int & frame_size):
     m_active_buffer {0},
     m_flt_ready_buffer {-1}
 {
-    // виділимо данні
+    // виділимо дані
     for (std::size_t b = 0; b < BUFERIZATION_NUM; ++b)
     {
         for (std::size_t i = 0; i < MAX_PROCESSING_BUF_NUM; ++i)
@@ -99,6 +99,21 @@ void DataSourceFrameProcessor::frameProcess()
     }
 }
 
+template<typename T>
+int convertToFloat(char * buf, const int payload_size, DataSourceBuffer<float> * cur_buf)
+{
+    T * payload = reinterpret_cast<T *>(buf);
+
+    const int total_elements = payload_size / sizeof(T);
+
+    for (int i = 0; i < total_elements; ++i)
+    {
+        cur_buf->payload()[i] = static_cast<float>(payload[i]);
+    }
+
+    return total_elements;
+}
+
 int DataSourceFrameProcessor::validateFrame(const std::shared_ptr<DataSourceBufferInterface> & buffer)
 {
     std::lock_guard<std::mutex> lock(m_process_mutex);
@@ -146,49 +161,17 @@ int DataSourceFrameProcessor::validateFrame(const std::shared_ptr<DataSourceBuff
         switch (frm->payload_type)
         {
         case PAYLOAD_TYPE::PAYLOAD_TYPE_8_BIT_UINT:
-        {
-            std::uint8_t * payload = reinterpret_cast<std::uint8_t *>(buf);
-
-            total_elements = buffer->payloadSize() / UINT8_SIZE;
-
-            for (std::uint32_t i = 0; i < total_elements; ++i)
-            {
-                cur_buf->payload()[i] = static_cast<float>(payload[i]);
-            }
-        }
-        break;
+            return convertToFloat<std::uint8_t>(buf, buffer->payloadSize(), cur_buf);
 
         case PAYLOAD_TYPE::PAYLOAD_TYPE_16_BIT_INT:
-        {
-            std::int16_t * payload = reinterpret_cast<std::int16_t *>(buf);
-
-            total_elements = buffer->payloadSize() / INT16_SIZE;
-
-            for (std::uint32_t i = 0; i < total_elements; ++i)
-            {
-                cur_buf->payload()[i] = static_cast<float>(payload[i]);
-            }
-        }
-        break;
+            return convertToFloat<std::int16_t>(buf, buffer->payloadSize(), cur_buf);
 
         case PAYLOAD_TYPE::PAYLOAD_TYPE_32_BIT_INT:
-        {
-            std::int32_t * payload = reinterpret_cast<std::int32_t *>(buf);
-
-            total_elements = buffer->payloadSize() / INT32_SIZE;
-
-            for (std::uint32_t i = 0; i < total_elements; ++i)
-            {
-                cur_buf->payload()[i] = static_cast<float>(payload[i]);
-            }
-        }
-        break;
+            return convertToFloat<std::int32_t>(buf, buffer->payloadSize(), cur_buf);
 
         default:
             break;
         }
-
-        return total_elements;
     }
 
     // перекладемо дані якшо вони вже в форматі float
@@ -236,8 +219,8 @@ void DataSourceFrameProcessor::putNewFrame(std::shared_ptr<DataSourceBufferInter
     // перевірка цілісності даних. розмір даних має бути кратним типу даних
     if (updated_size > static_cast<int>(FRAME_HEADER_SIZE))
     {
-        int recieved_payload_size = updated_size - FRAME_HEADER_SIZE;
-        int payload_size          = 1;
+        const int recieved_payload_size = updated_size - FRAME_HEADER_SIZE;
+        int payload_size          = UINT8_SIZE;
 
         switch (p_type)
         {

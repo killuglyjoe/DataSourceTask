@@ -12,6 +12,14 @@
 
 namespace DATA_SOURCE_TASK
 {
+
+// Non-copyable macro
+#define DATA_SOURCE_NON_COPYABLE(ClassName)\
+ClassName(const ClassName&) = delete;\
+    ClassName(ClassName&&) = delete;\
+    const ClassName& operator=(const ClassName&) = delete;\
+    void operator=(ClassName&&) = delete;
+
 #ifdef WIN32
 class Timer
 {
@@ -106,9 +114,9 @@ struct frame
     std::uint16_t frame_counter; // циклічний лічильник кадрів (frame_counter) 2 байти;
     std::uint8_t source_id;      // ідентифікатор походження (source_id) 1 байт;
     PAYLOAD_TYPE payload_type;   // тип даних (payload_type) 1 байт;
-    std::uint32_t payload_size;  // розмір блоку даних корисного навантаження (payload_size) 4 байти;
-    void * payload;              // дані payload являють собою оцифовані відліки сигналу.
-                                 // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
+    std::uint32_t payload_size; // розмір блоку даних корисного навантаження (payload_size) 4 байти;
+    void * payload;             // дані payload являють собою оцифовані відліки сигналу.
+                                // розмір блоку даних корисного навантаження може бути різний, зазвичай кратний 4 байтам
 };
 
 static constexpr std::uint32_t FRAME_HEADER_SIZE {sizeof(struct frame) - sizeof(void *)};
