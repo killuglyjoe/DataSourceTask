@@ -66,11 +66,6 @@ protected:
     void frameProcess();
 
 private:
-    /// \brief перетворення масиву цілих чисел в float[]
-    /// \param payload - масив цілих чисел
-    void convertToFLoat(char * payload);
-
-private:
     int m_frame_size    = 0; // відомий розмір кадру
     int m_packets_loss  = 0; // втрати пакетів на основі лфчильника кадрів
     int m_stream_broken = 0; // потік даних не цілісний. Не вистачає байтів для даних.
